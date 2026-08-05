@@ -424,20 +424,21 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split('?')[0]
+        norm = path.replace('/api/v1', '/api')
 
-        if path == '/api/v1/mission':
+        if norm == '/api/mission' or norm.startswith('/api/mission/'):
             self.send_json(DB["mission"])
-        elif path == '/api/v1/employees':
+        elif norm == '/api/employees':
             self.send_json(DB["employees"])
-        elif path == '/api/v1/agents':
+        elif norm == '/api/agents' or norm == '/api/workforce':
             self.send_json(DB["agents"])
-        elif path == '/api/v1/tasks':
+        elif norm == '/api/tasks':
             self.send_json(DB["tasks"])
-        elif path == '/api/v1/timeline':
+        elif norm == '/api/timeline':
             self.send_json(DB["timelinePhases"])
-        elif path == '/api/v1/activity':
+        elif norm == '/api/activity':
             self.send_json(DB["activityLogs"])
-        elif path == '/api/v1/analytics':
+        elif norm == '/api/analytics':
             self.send_json(DB["analytics"])
         else:
             super().do_GET()
@@ -447,7 +448,10 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         body_bytes = self.rfile.read(content_length)
         body = json.loads(body_bytes.decode('utf-8')) if body_bytes else {}
 
-        if self.path == '/api/v1/tasks':
+        path = self.path.split('?')[0]
+        norm = path.replace('/api/v1', '/api')
+
+        if norm == '/api/tasks':
             new_id = f"TSK-{len(DB['tasks']) + 101}"
             new_task = {
                 "id": new_id,
@@ -462,7 +466,7 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
             DB["tasks"].insert(0, new_task)
             self.send_json(new_task, code=201)
 
-        elif self.path == '/api/v1/mission/defcon':
+        elif norm == '/api/mission/defcon':
             DB["mission"]["status"] = "Sprint 14 Active"
             self.send_json(DB["mission"])
         else:
@@ -473,7 +477,10 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         body_bytes = self.rfile.read(content_length)
         body = json.loads(body_bytes.decode('utf-8')) if body_bytes else {}
 
-        match_task = re.match(r'^/api/v1/tasks/([^/]+)$', self.path)
+        path = self.path.split('?')[0]
+        norm = path.replace('/api/v1', '/api')
+
+        match_task = re.match(r'^/api/tasks/([^/]+)$', norm)
         if match_task:
             task_id = match_task.group(1)
             task = next((t for t in DB["tasks"] if t["id"] == task_id), None)
@@ -486,7 +493,7 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(404, "Task not found")
                 return
 
-        match_agent = re.match(r'^/api/v1/agents/([^/]+)$', self.path)
+        match_agent = re.match(r'^/api/(?:agents|workforce)/([^/]+)(?:/status)?$', norm)
         if match_agent:
             agent_id = match_agent.group(1)
             agent = next((a for a in DB["agents"] if a["id"] == agent_id), None)

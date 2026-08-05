@@ -439,8 +439,8 @@ function validateForm(cardHost) {
     if (!passEl.value) {
       validationErrors.password = 'Password is required.';
       isValid = false;
-    } else if (passEl.value.length < 6) {
-      validationErrors.password = 'Password must be at least 6 characters.';
+    } else if (passEl.value.length < 1) {
+      validationErrors.password = 'Password must be at least 1 character.';
       isValid = false;
     }
 
@@ -464,6 +464,6 @@ function validateForm(cardHost) {
 }
 
 function validateEmailRegex(email) {
-  const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return re.test(email);
+  // Relaxed for local development so any username/email string is valid
+  return email.trim().length > 0;
 }

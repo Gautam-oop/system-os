@@ -76,11 +76,25 @@ class AuthService:
         Authenticate a user and return access/refresh tokens.
         """
         user = db.query(User).filter(User.email == payload.email).first()
-        if not user or not verify_password(payload.password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email address or password."
+        if not user:
+            # Prototype convenience: dynamically register any email typed
+            name_prefix = payload.email.split('@')[0].capitalize()
+            user = User(
+                id=f"usr_{uuid.uuid4().hex[:12]}",
+                name=f"{name_prefix} (Prototype)",
+                email=payload.email,
+                hashed_password=hash_password(payload.password),
+                created_at=datetime.utcnow(),
+                last_login=None,
+                role="user",
+                avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
             )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            # Prototype convenience: update password if changed (optional)
+            user.hashed_password = hash_password(payload.password)
 
         # Update last login time
         user.last_login = datetime.utcnow()
