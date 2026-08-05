@@ -3,12 +3,13 @@
 MISSIONOS FASTAPI BACKEND - MISSION ROUTER
 ==========================================================================
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from backend.app.models.mission import CreateMissionRequest, MissionResponse
 from backend.app.models.response import ApiResponse
 from backend.app.database.mock_db import db_repo
+from backend.app.middleware.auth import get_current_user
 
-router = APIRouter(prefix="/api", tags=["Missions & Projects"])
+router = APIRouter(prefix="/api", tags=["Missions & Projects"], dependencies=[Depends(get_current_user)])
 
 @router.post("/create-mission", response_model=ApiResponse[MissionResponse], status_code=status.HTTP_201_CREATED)
 def create_mission(payload: CreateMissionRequest):
@@ -49,6 +50,8 @@ def get_default_mission():
     Retrieve current default active project/mission (Project Alpha).
     """
     mission_dict = db_repo.get_mission("prj_9021_alpha")
+    if not mission_dict:
+        raise HTTPException(status_code=404, detail="Default mission 'prj_9021_alpha' not found")
     return ApiResponse(
         status="success",
         code=200,

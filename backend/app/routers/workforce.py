@@ -5,12 +5,13 @@ MISSIONOS FASTAPI BACKEND - WORKFORCE (AI TEAMMATES) ROUTER
 """
 
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from backend.app.models.workforce import TeammateResponse, UpdateTeammateStatusRequest
 from backend.app.models.response import ApiResponse
 from backend.app.database.mock_db import db_repo
+from backend.app.middleware.auth import get_current_user
 
-router = APIRouter(prefix="/api", tags=["AI Workforce & Teammates"])
+router = APIRouter(prefix="/api", tags=["AI Workforce & Teammates"], dependencies=[Depends(get_current_user)])
 
 @router.get("/workforce", response_model=ApiResponse[List[TeammateResponse]])
 @router.get("/agents", response_model=ApiResponse[List[TeammateResponse]])

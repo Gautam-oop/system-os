@@ -11,7 +11,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.app.config import settings
-from backend.app.routers import mission, task, workforce, extra
+from backend.app.routers import mission, task, workforce, extra, auth
+from backend.app.database.user_db import init_db
+
+# Initialize User SQLite database (creates tables, seeds default user)
+init_db()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -31,6 +35,7 @@ app.add_middleware(
 )
 
 # Register Router Blueprints
+app.include_router(auth.router)
 app.include_router(mission.router)
 app.include_router(task.router)
 app.include_router(workforce.router)

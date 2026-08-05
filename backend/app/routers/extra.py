@@ -5,11 +5,12 @@ MISSIONOS FASTAPI BACKEND - AUXILIARY ROUTERS
 """
 
 from typing import List, Dict, Any
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from backend.app.models.response import ApiResponse
 from backend.app.database.mock_db import db_repo
+from backend.app.middleware.auth import get_current_user
 
-router = APIRouter(prefix="/api", tags=["Auxiliary Telemetry"])
+router = APIRouter(prefix="/api", tags=["Auxiliary Telemetry"], dependencies=[Depends(get_current_user)])
 
 @router.get("/employees", response_model=ApiResponse[List[Dict[str, Any]]])
 def get_employees():

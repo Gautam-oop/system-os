@@ -5,12 +5,13 @@ MISSIONOS FASTAPI BACKEND - TASK ROUTER
 """
 
 from typing import List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from backend.app.models.task import CreateTaskRequest, UpdateTaskStatusRequest, TaskResponse
 from backend.app.models.response import ApiResponse
 from backend.app.database.mock_db import db_repo
+from backend.app.middleware.auth import get_current_user
 
-router = APIRouter(prefix="/api", tags=["Tasks & Kanban"])
+router = APIRouter(prefix="/api", tags=["Tasks & Kanban"], dependencies=[Depends(get_current_user)])
 
 @router.get("/tasks", response_model=ApiResponse[List[TaskResponse]])
 def get_all_tasks():

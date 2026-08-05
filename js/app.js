@@ -3,6 +3,9 @@
    ========================================================================== */
 
 import { store } from './store.js';
+import { authContext } from './authContext.js';
+import { renderAuth } from './components/Auth.js';
+import { renderLanding } from './components/Landing.js';
 import { renderSidebar } from './components/Sidebar.js';
 import { renderNavbar } from './components/Navbar.js';
 import { renderMissionOverview } from './components/MissionOverview.js';
@@ -200,16 +203,100 @@ function initApp() {
     });
   }
 
-  // ─── Initial static render ──────────────────────────────────────────
+  const appLayoutEl = document.getElementById('app');
+  const authContainerEl = document.getElementById('auth-container');
+  const landingContainerEl = document.getElementById('landing-container');
 
-  if (sidebarEl) renderSidebar(sidebarEl);
-  if (navbarEl) renderNavbar(navbarEl);
-  if (modalHostEl) renderModalHost(modalHostEl);
-  switchView(store.getActiveTab());
+  function showDashboard() {
+    landingContainerEl.style.display = 'none';
+    authContainerEl.style.display = 'none';
+    appLayoutEl.style.display = 'flex';
+    
+    // Initial static render
+    if (sidebarEl) renderSidebar(sidebarEl);
+    if (navbarEl) renderNavbar(navbarEl);
+    if (modalHostEl) renderModalHost(modalHostEl);
+    switchView(store.getActiveTab());
 
-  // ─── NOW boot the store (load API + start simulation) ───────────────
-  console.log('[missionOS] Subscriptions wired. Calling store.boot()...');
-  store.boot();
+    // Boot store
+    console.log('[missionOS] Subscriptions wired. Calling store.boot()...');
+    store.boot();
+  }
+
+  function showAuthScreen() {
+    appLayoutEl.style.display = 'none';
+    landingContainerEl.style.display = 'none';
+    authContainerEl.style.display = 'flex';
+    renderAuth(authContainerEl, () => {
+      // Login Success Callback
+      authContainerEl.animate(
+        [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.98)' }],
+        { duration: 300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+      ).onfinish = () => {
+        showDashboard();
+        appLayoutEl.animate(
+          [{ opacity: 0, transform: 'scale(1.02)' }, { opacity: 1, transform: 'scale(1)' }],
+          { duration: 400, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+        );
+      };
+    });
+  }
+
+  function showLandingScreen() {
+    appLayoutEl.style.display = 'none';
+    authContainerEl.style.display = 'none';
+    landingContainerEl.style.display = 'flex';
+    
+    renderLanding(landingContainerEl, () => {
+      // Seamless zoom transition callback from landing to login
+      landingContainerEl.animate(
+        [{ opacity: 1 }, { opacity: 0 }],
+        { duration: 350, easing: 'ease-in-out' }
+      ).onfinish = () => {
+        showAuthScreen();
+        authContainerEl.animate(
+          [{ opacity: 0, transform: 'scale(1.03)' }, { opacity: 1, transform: 'scale(1)' }],
+          { duration: 450, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+        );
+      };
+    });
+  }
+
+  // Listen to auth changes
+  authContext.subscribe((event, data) => {
+    if (event === 'auth_state_changed') {
+      if (data && data.authenticated) {
+        if (authContainerEl.style.display !== 'none' || landingContainerEl.style.display !== 'none') {
+          // If the login callback already handled it, don't double show
+          return;
+        }
+        showDashboard();
+      } else {
+        showLandingScreen();
+      }
+    } else if (event === 'session_expired') {
+      appLayoutEl.animate(
+        [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.98)' }],
+        { duration: 250, easing: 'ease-in-out' }
+      ).onfinish = () => {
+        showLandingScreen();
+        landingContainerEl.animate(
+          [{ opacity: 0, transform: 'scale(1.02)' }, { opacity: 1, transform: 'scale(1)' }],
+          { duration: 250, easing: 'ease-in-out' }
+        );
+      };
+    }
+  });
+
+  // Verify auth session on load
+  console.log('[missionOS] Booting auth module...');
+  authContext.checkAuth().then(authenticated => {
+    if (authenticated) {
+      showDashboard();
+    } else {
+      showLandingScreen();
+    }
+  });
 }
 
 function showToast({ type = 'info', text = '' }) {
