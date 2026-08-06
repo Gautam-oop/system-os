@@ -9,7 +9,10 @@ export function renderLanding(containerEl, onLaunchClick) {
 
   // Render HTML stage layout
   containerEl.innerHTML = `
-    <!-- Background elements -->
+    <!-- Dynamic Animated Aurora Background Elements -->
+    <div class="aurora-blob aurora-blob-1"></div>
+    <div class="aurora-blob aurora-blob-2"></div>
+    <div class="aurora-blob aurora-blob-3"></div>
     <div class="landing-bg"></div>
     <div class="landing-bg-reflections"></div>
     <div class="landing-bg-grid"></div>
@@ -590,6 +593,22 @@ function initLandingEngine(containerEl, onLaunchClick) {
   let rotX = 0.002;
   let rotY = 0.003;
 
+  // Floating Ambient Background Dust Particles
+  const bgParticles = [];
+  const numBgParticles = 55;
+  for (let i = 0; i < numBgParticles; i++) {
+    bgParticles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: Math.random() * 2 + 0.5,
+      vy: -(Math.random() * 0.35 + 0.1),
+      vx: (Math.random() - 0.5) * 0.25,
+      baseAlpha: Math.random() * 0.35 + 0.15,
+      phase: Math.random() * Math.PI * 2,
+      color: i % 3 === 0 ? '99, 102, 241' : (i % 3 === 1 ? '168, 85, 247' : '6, 182, 212')
+    });
+  }
+
   // ─── Floating Orbiting AI Teammates Definition ──────────────────────────
   const agents = [
     { id: 'pm', name: 'Vance.AI', role: 'Project Manager', initials: 'PM', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.12)', statuses: ['Planning sprint...', 'Organizing backlog...', 'Checking timeline...', 'Assigning tasks...'], statusIdx: 0, angle: 0, speed: 0.0006 },
@@ -746,6 +765,23 @@ function initLandingEngine(containerEl, onLaunchClick) {
     requestAnimationFrame(animate);
 
     ctx.clearRect(0, 0, width, height);
+
+    // Render floating ambient background dust particles
+    const sec = time * 0.001;
+    bgParticles.forEach(p => {
+      p.y += p.vy;
+      p.x += p.vx + Math.sin(sec + p.phase) * 0.2;
+
+      if (p.y < 0) p.y = height;
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+
+      const alpha = p.baseAlpha + Math.sin(sec * 1.5 + p.phase) * 0.15;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color}, ${Math.max(0.05, alpha)})`;
+      ctx.fill();
+    });
 
     const cosX = Math.cos(rotX);
     const sinX = Math.sin(rotX);
