@@ -174,20 +174,13 @@ function renderNewTaskModal(containerEl) {
   const form = containerEl.querySelector('#new-task-form');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const title = containerEl.querySelector('#task-title-input').value;
+    const title = containerEl.querySelector('#task-title-input').value.trim();
     const priority = containerEl.querySelector('#task-priority-select').value;
-    const cleanTitle = title.trim();
 
-if (
-  cleanTitle.length < 15 ||
-  cleanTitle.split(/\s+/).length < 4
-) {
-  alert("Please describe the task in more detail.");
-  return;
-}
+    if (!title) return;
 
     store.addNewTask({
-      title: cleanTitle,
+      title,
       assignedAgentId: 'auto',
       priority,
       status: 'ai_executing'

@@ -163,18 +163,15 @@ class MissionStore {
   }
 
   async addNewTask(taskData) {
-const title = (taskData.title || "").trim();
+    const title = (taskData.title || "").trim();
 
-if (
-  title.length < 15 ||
-  title.split(" ").length < 4
-) {
-  this.notify('toast', {
-    type: 'error',
-    text: 'Please describe the task in more detail.'
-  });
-  return;
-}
+    if (title.length < 3) {
+      this.notify('toast', {
+        type: 'error',
+        text: 'Please enter a task title.'
+      });
+      return;
+    }
 
 // Auto-generate realistic 5-phase development lifecycle for this task
     const subtasks = [
