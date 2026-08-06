@@ -58,12 +58,12 @@ export function renderLanding(containerEl, onLaunchClick) {
         </h1>
         
         <p class="landing-subtitle">
-          MissionOps automatically assembles an autonomous AI company that plans, researches, designs, builds, and tests complex software projects with zero human bottlenecks.
+          missionOS automatically assembles an autonomous AI company that plans, researches, designs, builds, and tests complex software projects with zero human bottlenecks.
         </p>
 
         <div class="landing-cta-group">
           <button class="btn-primary-auth" id="hero-launch-btn">
-            Launch MissionOps
+            Launch missionOS
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>

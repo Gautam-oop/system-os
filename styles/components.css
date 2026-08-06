@@ -461,6 +461,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1.25rem;
+  align-items: start;
 }
 
 @media (max-width: 1200px) {
@@ -475,16 +476,170 @@
 }
 
 .kanban-column {
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1rem;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--dur-normal) ease;
+}
+
+.kanban-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.kanban-column-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-align: left;
+}
+
+.task-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.kanban-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+  min-height: 100px;
 }
 
 .kanban-task-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-  padding: 1.25rem;
+  padding: 1.1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  text-align: left;
+  transition: all var(--dur-fast) ease;
+  cursor: grab;
+  position: relative;
+}
+
+.kanban-task-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 0 12px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+.task-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.task-card-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.task-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0 0 0.75rem 0;
+  text-align: left;
+  word-break: break-word;
+}
+
+.task-assigned-agents-box {
+  margin-top: 0.65rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.task-assigned-agents-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+  text-align: left;
+}
+
+.task-assigned-agent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  padding: 0.2rem 0;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.agent-name-tag {
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.agent-task-tag {
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.task-agent-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.task-subtask-count {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+}
+
+.task-shift-wrapper {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* ─── 6. ROADMAP TIMELINE & GANTT CHART ───────────────────────────────── */

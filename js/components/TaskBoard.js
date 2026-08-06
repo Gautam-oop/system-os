@@ -159,52 +159,24 @@ function renderTaskCard(task) {
     <div class="kanban-task-card" draggable="true" data-task-id="${task.id}">
       <div class="task-meta-top">
         <span class="badge ${priorityBadge}">${(task.priority || 'medium').toUpperCase()}</span>
-        <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);">${task.id}</span>
+        <span class="task-card-id">${task.id}</span>
       </div>
 
-      <div class="task-title">${task.title}</div>
-      ${
-  task.assignedAgents?.length
-    ? `
-    <div style="margin-top:10px;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px;">
-      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">
-        Assigned Agents
-      </div>
+      <h4 class="task-title">${task.title}</h4>
 
-      ${task.assignedAgents
-        .map(
-          (agent) => `
-            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
-              <span>🤖 ${agent.name}</span>
-              <span>${agent.task}</span>
+      ${task.assignedAgents && task.assignedAgents.length > 0 ? `
+        <div class="task-assigned-agents-box">
+          <div class="task-assigned-agents-label">Assigned Swarm Agents</div>
+          ${task.assignedAgents.map(agent => `
+            <div class="task-assigned-agent-row">
+              <span class="agent-name-tag">🤖 ${agent.name}</span>
+              <span class="agent-task-tag">${agent.task || ''}</span>
             </div>
-          `
-        )
-        .join("")}
-    </div>
-  `
-    : ""
-}
+          `).join('')}
+        </div>
+      ` : ''}
 
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.75rem;">
-      ${
-  task.assignedAgents?.length
-    ? `
-      <div style="margin-top:10px;font-size:12px;">
-        ${task.assignedAgents
-          .map(
-            agent => `
-              <div style="display:flex;justify-content:space-between;padding:3px 0;">
-                <span>🤖 ${agent.name}</span>
-                <span>${agent.task}</span>
-              </div>
-            `
-          )
-          .join("")}
-      </div>
-    `
-    : ""
-}
+      <div class="task-card-footer">
         <div class="task-agent-chip">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -214,13 +186,13 @@ function renderTaskCard(task) {
         </div>
 
         ${totalSubtasks > 0 ? `
-          <div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted);">
+          <div class="task-subtask-count">
             ✓ ${doneSubtasks}/${totalSubtasks}
           </div>
         ` : ''}
       </div>
 
-      <div style="margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-subtle); display: flex; justify-content: flex-end;">
+      <div class="task-shift-wrapper">
         <button class="btn btn-secondary btn-sm task-shift-btn" data-task-id="${task.id}" data-target-status="${nextStatusMap[task.status] || 'in_progress'}">
           Move → ${nextLabelMap[task.status] || 'Next'}
         </button>
