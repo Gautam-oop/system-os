@@ -115,6 +115,7 @@ function initApp() {
   store.subscribe('tasksUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'tasks' && views.tasks) renderTaskBoard(views.tasks);
+    if (tab === 'overview' && views.overview) renderMissionOverview(views.overview);
   });
 
   store.subscribe('timelineUpdated', () => {

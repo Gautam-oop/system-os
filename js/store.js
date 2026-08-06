@@ -24,21 +24,11 @@ class MissionStore {
         currentSprint: "Sprint 14",
         sprintDaysRemaining: 3,
         description: "Next-generation AI Workforce Operating System for accelerating software engineering teams.",
-        objectives: [
-          { id: 'obj_01', code: 'FE-101', name: 'Frontend Design System & Accessibility', progressPercentage: 92, status: 'IN_PROGRESS', leadAgentId: 'agent-aura' },
-          { id: 'obj_02', code: 'BE-202', name: 'REST API Microservices & DB Pooling', progressPercentage: 65, status: 'IN_PROGRESS', leadAgentId: 'agent-titan' },
-          { id: 'obj_03', code: 'SEC-303', name: 'OAuth2 Authentication & Key Rotation', progressPercentage: 100, status: 'COMPLETED', leadAgentId: 'agent-cipher' },
-          { id: 'obj_04', code: 'OPS-404', name: 'Automated Kubernetes CI/CD Pipeline', progressPercentage: 40, status: 'IN_PROGRESS', leadAgentId: 'agent-vortex' }
-        ]
+        objectives: []
       },
       employees: [],
       agents: agentService.getAgents(),
-      tasks: [
-        { id: "TSK-101", title: "Refactor Core Dashboard Layout Grid System", status: "completed", priority: "high", assignedAgentId: "agent-design", assignedAgentName: "Aura", subtasks: [{ title: "Setup Flexible CSS Grid", done: true }] },
-        { id: "TSK-103", title: "Optimize PostgreSQL Query Indexing for Tasks Endpoint", status: "ai_executing", priority: "critical", assignedAgentId: "agent-backend", assignedAgentName: "Titan", subtasks: [{ title: "Analyze Slow Query Logs", done: true }] },
-        { id: "TSK-107", title: "Setup Cypress E2E Regression Test Suite for Billing", status: "in_progress", priority: "high", assignedAgentId: "agent-qa", assignedAgentName: "Spectre", subtasks: [{ title: "Mock Webhooks", done: false }] },
-        { id: "TSK-108", title: "Competitor Benchmark Analysis & LLM Strategy", status: "backlog", priority: "high", assignedAgentId: "agent-research", assignedAgentName: "Nexus", subtasks: [{ title: "Ingest Market Data", done: false }] }
-      ],
+      tasks: [],
       timelinePhases: [],
       activityLogs: [],
       analytics: null,
@@ -172,14 +162,12 @@ class MissionStore {
     this.notify('activityLogsUpdated', this.state.activityLogs);
   }
 
-  addNewTask(taskData) {
-    const newId = `TSK-${200 + this.state.tasks.length}`;
-    
+  async addNewTask(taskData) {
     // Auto-generate executing sub-task steps for this task
     const subtasks = [
-      { id: `${newId}-sub-1`, title: 'Ingest Specification & Design Tokens', done: true, status: 'completed' },
-      { id: `${newId}-sub-2`, title: 'Autonomous Implementation & Code Generation', done: false, status: 'executing' },
-      { id: `${newId}-sub-3`, title: 'Automated Unit Tests & Security Audit', done: false, status: 'pending' }
+      { id: `temp-sub-1`, title: 'Ingest Specification & Design Tokens', done: true, status: 'completed' },
+      { id: `temp-sub-2`, title: 'Autonomous Implementation & Code Generation', done: false, status: 'executing' },
+      { id: `temp-sub-3`, title: 'Automated Unit Tests & Security Audit', done: false, status: 'pending' }
     ];
 
     // Intelligent AI Agent Routing Logic
@@ -201,38 +189,47 @@ class MissionStore {
     const finalAgentId = taskData.assignedAgentId === 'auto' ? autoAgentId : (taskData.assignedAgentId || autoAgentId);
     const finalAgentName = taskData.assignedAgentId === 'auto' ? autoAgentName : (taskData.assignedAgentName || autoAgentName);
 
-    const newTask = {
-      id: newId,
-      title: taskData.title || 'New Engineering Objective',
-      assignedAgentId: finalAgentId,
-      assignedAgentName: finalAgentName,
-      priority: taskData.priority || 'high',
-      objectiveId: taskData.objectiveId || null,
-      status: 'ai_executing',
-      progress: 35,
-      subtasks: taskData.subtasks || subtasks,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const savedTask = await apiService.createTask({
+        title: taskData.title || 'New Engineering Objective',
+        assignedAgentId: finalAgentId,
+        assignedAgentName: finalAgentName,
+        priority: taskData.priority || 'high',
+        status: 'ai_executing',
+        subtasks: taskData.subtasks || subtasks
+      });
 
-    this.state.tasks.unshift(newTask);
+      // Integrate created task into state
+      const taskObj = {
+        ...savedTask,
+        progress: 35,
+        objectiveId: taskData.objectiveId || null
+      };
 
-    // Also update assigned agent status to Working on this task
-    const agent = (this.state.agents || []).find(a => a.id === newTask.assignedAgentId);
-    if (agent) {
-      agent.status = 'Working';
-      agent.currentTask = `[${newId}] ${newTask.title}`;
-      agent.progress = 35;
+      this.state.tasks.unshift(taskObj);
+
+      // Update assigned agent status
+      const agent = (this.state.agents || []).find(a => a.id === taskObj.assignedAgentId);
+      if (agent) {
+        agent.status = 'Working';
+        agent.currentTask = `[${taskObj.id}] ${taskObj.title}`;
+        agent.progress = 35;
+      }
+
+      this.addActivityLog({
+        agentName: taskObj.assignedAgentName,
+        message: `[${taskObj.id}] Executing new task: ${taskObj.title}`,
+        category: 'WORKFLOW'
+      });
+
+      this.notify('tasksUpdated', this.state.tasks);
+      this.notify('agentsUpdated', this.state.agents);
+      this.notify('toast', { type: 'success', text: `[${taskObj.id}] Created and assigned to ${taskObj.assignedAgentName}!` });
+
+    } catch (err) {
+      console.error('[missionOS] Error creating task:', err);
+      this.notify('toast', { type: 'error', text: `Failed to create task: ${err.message}` });
     }
-
-    this.addActivityLog({
-      agentName: newTask.assignedAgentName,
-      message: `[${newId}] Executing new task: ${newTask.title}`,
-      category: 'WORKFLOW'
-    });
-
-    this.notify('tasksUpdated', this.state.tasks);
-    this.notify('agentsUpdated', this.state.agents);
-    this.notify('toast', { type: 'success', text: `[${newId}] Created and assigned to ${newTask.assignedAgentName}!` });
   }
 }
 
