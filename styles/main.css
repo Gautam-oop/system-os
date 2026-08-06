@@ -60,11 +60,11 @@
   --cyan:         #06b6d4;
   --cyan-bg:      rgba(6,182,212,0.08);
 
-  /* Text */
-  --text:         #18181b;
-  --text-secondary:#52525b;
-  --text-tertiary: #a1a1aa;
-  --text-inverse:  #fafafa;
+  /* Text - High contrast sharp typography for white/light backgrounds */
+  --text:          #09090b;
+  --text-secondary:#27272a;
+  --text-tertiary: #4b5563;
+  --text-inverse:  #ffffff;
 
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', system-ui, sans-serif;
@@ -151,19 +151,25 @@ body::after {
   background-size: 64px 64px;
 }
 
-/* ─── Typography ──────────────────────────────────────────────────────── */
+/* ─── Typography — Bold, Sharp & High Contrast ────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.035em; }
-h2 { font-size: 1.35rem; }
-h3 { font-size: 1.1rem; }
+h1 { font-size: 2.5rem; font-weight: 850; letter-spacing: -0.04em; }
+h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.035em; }
+h3 { font-size: 1.2rem; font-weight: 750; }
 
 .font-mono { font-family: var(--font-mono); }
+.font-sharp-bold { font-weight: 800; color: #09090b; letter-spacing: -0.03em; }
+.font-heavy-title { font-weight: 900; color: #000000; letter-spacing: -0.04em; }
+.text-high-contrast { color: #18181b; font-weight: 600; }
+.text-sharp-secondary { color: #3f3f46; font-weight: 600; }
 
 /* ─── Layout Shell ────────────────────────────────────────────────────── */
 .app-layout {
