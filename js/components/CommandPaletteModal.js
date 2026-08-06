@@ -150,7 +150,7 @@ function renderNewTaskModal(containerEl) {
             <input type="text" id="task-title-input" required placeholder="e.g. Refactor API Route Handler" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.9rem;" />
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
             <div>
               <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.35rem;">ASSIGN AI TEAMMATE</label>
               <select id="task-agent-select" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.9rem;">
@@ -167,6 +167,13 @@ function renderNewTaskModal(containerEl) {
                 <option value="low">LOW</option>
               </select>
             </div>
+          </div>
+
+          <div style="margin-top: 0.5rem;">
+            <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.35rem;">TARGET PROJECT / OBJECTIVE</label>
+            <select id="task-project-select" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.9rem;">
+              ${(store.getState().mission?.objectives || []).map(obj => `<option value="${obj.id}">[${obj.code}] ${obj.name}</option>`).join('')}
+            </select>
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
@@ -186,13 +193,15 @@ function renderNewTaskModal(containerEl) {
     const title = containerEl.querySelector('#task-title-input').value;
     const [agentId, agentName] = containerEl.querySelector('#task-agent-select').value.split('|');
     const priority = containerEl.querySelector('#task-priority-select').value;
+    const objectiveId = containerEl.querySelector('#task-project-select').value;
 
     store.addNewTask({
       title,
       assignedAgentId: agentId,
       assignedAgentName: agentName,
       priority,
-      status: 'backlog'
+      objectiveId,
+      status: 'ai_executing'
     });
 
     store.closeModal();

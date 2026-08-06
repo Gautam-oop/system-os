@@ -183,6 +183,7 @@ class MissionStore {
       assignedAgentId: taskData.assignedAgentId || 'agent-aura',
       assignedAgentName: taskData.assignedAgentName || 'Aura',
       priority: taskData.priority || 'high',
+      objectiveId: taskData.objectiveId || null,
       status: 'ai_executing',
       progress: 35,
       subtasks: taskData.subtasks || subtasks,
