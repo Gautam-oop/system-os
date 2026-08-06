@@ -306,12 +306,16 @@ function initApp() {
 
   // Verify auth session on load
   console.log('[missionOS] Booting auth module...');
+  showLandingScreen(); // Show landing screen immediately by default
   authContext.checkAuth().then(authenticated => {
     if (authenticated) {
       showDashboard();
     } else {
       showLandingScreen();
     }
+  }).catch(err => {
+    console.warn('[missionOS] Boot auth check error:', err);
+    showLandingScreen();
   });
 }
 
