@@ -59,15 +59,27 @@ export function renderMissionOverview(containerEl, forceRender = false) {
         if (taskListContainer) {
           const projectTasks = tasksByProject[obj.id] || [];
           taskListContainer.innerHTML = projectTasks.length > 0 ? projectTasks.map(task => `
-            <div class="task-subtask-item ${task.status === 'ai_executing' || task.status === 'in_progress' ? 'executing' : task.status === 'completed' ? 'completed' : ''}">
-              <div class="subtask-icon">
-                ${task.status === 'completed' ? '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>' : (task.status === 'ai_executing' || task.status === 'in_progress' ? '<div class="pulse-dot"></div>' : '<div class="empty-dot"></div>')}
+            <div style="border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 0.5rem;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 0.5rem;">
+                <span style="font-weight: 700; font-size: 0.82rem; color: #09090b;">${task.title}</span>
               </div>
-              <div style="display:flex; flex-direction:column; margin-left: 0.25rem;">
-                <span class="subtask-title" style="font-weight: 600; color: #1e293b;">${task.title}</span>
-                <span style="font-size: 0.65rem; color: #64748b; font-family: var(--font-mono); margin-top: 0.15rem;">
-                  Assigned to: <span style="color: ${task.status === 'completed' ? '#10b981' : '#6366f1'};">${task.assignedAgentName || 'Agent'}</span>
+              <div style="display:flex; align-items:center; gap: 0.5rem; margin-bottom: 0.75rem; font-size: 0.65rem; font-family: var(--font-mono);">
+                <span style="padding: 0.2rem 0.4rem; background: ${task.status === 'completed' ? 'rgba(16,185,129,0.1)' : 'rgba(99,102,241,0.1)'}; color: ${task.status === 'completed' ? '#10b981' : '#6366f1'}; border-radius: 4px; font-weight: 700;">
+                  ${task.assignedAgentName || 'Agent'}
                 </span>
+                <span style="color: #64748b;">•</span>
+                <span style="color: #64748b;">${task.status === 'ai_executing' ? 'AI EXECUTING' : task.status.replace('_', ' ').toUpperCase()}</span>
+              </div>
+              
+              <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-left: 0.25rem; padding-left: 0.5rem; border-left: 2px solid #e2e8f0;">
+                ${(task.subtasks || []).map(sub => `
+                  <div class="task-subtask-item ${sub.status}" style="font-size: 0.75rem;">
+                    <div class="subtask-icon">
+                      ${sub.done ? '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>' : (sub.status === 'executing' ? '<div class="pulse-dot"></div>' : '<div class="empty-dot"></div>')}
+                    </div>
+                    <span class="subtask-title" style="color: ${sub.done ? '#09090b' : sub.status === 'executing' ? '#6366f1' : '#94a3b8'}; ${sub.status === 'executing' ? 'font-weight: 600;' : ''}">${sub.title}</span>
+                  </div>
+                `).join('')}
               </div>
             </div>
           `).join('') : `
@@ -158,15 +170,27 @@ export function renderMissionOverview(containerEl, forceRender = false) {
                 <div class="task-subtask-header">Tasks Happening for this Project:</div>
                 <div class="task-subtask-list" style="margin-top: 0.25rem;">
                   ${projectTasks.length > 0 ? projectTasks.map(task => `
-                    <div class="task-subtask-item ${task.status === 'ai_executing' || task.status === 'in_progress' ? 'executing' : task.status === 'completed' ? 'completed' : ''}">
-                      <div class="subtask-icon">
-                        ${task.status === 'completed' ? '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>' : (task.status === 'ai_executing' || task.status === 'in_progress' ? '<div class="pulse-dot"></div>' : '<div class="empty-dot"></div>')}
+                    <div style="border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 0.5rem;">
+                      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 700; font-size: 0.82rem; color: #09090b;">${task.title}</span>
                       </div>
-                      <div style="display:flex; flex-direction:column; margin-left: 0.25rem;">
-                        <span class="subtask-title" style="font-weight: 600; color: #1e293b;">${task.title}</span>
-                        <span style="font-size: 0.65rem; color: #64748b; font-family: var(--font-mono); margin-top: 0.15rem;">
-                          Assigned to: <span style="color: ${task.status === 'completed' ? '#10b981' : '#6366f1'};">${task.assignedAgentName || 'Agent'}</span>
+                      <div style="display:flex; align-items:center; gap: 0.5rem; margin-bottom: 0.75rem; font-size: 0.65rem; font-family: var(--font-mono);">
+                        <span style="padding: 0.2rem 0.4rem; background: ${task.status === 'completed' ? 'rgba(16,185,129,0.1)' : 'rgba(99,102,241,0.1)'}; color: ${task.status === 'completed' ? '#10b981' : '#6366f1'}; border-radius: 4px; font-weight: 700;">
+                          ${task.assignedAgentName || 'Agent'}
                         </span>
+                        <span style="color: #64748b;">•</span>
+                        <span style="color: #64748b;">${task.status === 'ai_executing' ? 'AI EXECUTING' : task.status.replace('_', ' ').toUpperCase()}</span>
+                      </div>
+                      
+                      <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-left: 0.25rem; padding-left: 0.5rem; border-left: 2px solid #e2e8f0;">
+                        ${(task.subtasks || []).map(sub => `
+                          <div class="task-subtask-item ${sub.status}" style="font-size: 0.75rem;">
+                            <div class="subtask-icon">
+                              ${sub.done ? '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>' : (sub.status === 'executing' ? '<div class="pulse-dot"></div>' : '<div class="empty-dot"></div>')}
+                            </div>
+                            <span class="subtask-title" style="color: ${sub.done ? '#09090b' : sub.status === 'executing' ? '#6366f1' : '#94a3b8'}; ${sub.status === 'executing' ? 'font-weight: 600;' : ''}">${sub.title}</span>
+                          </div>
+                        `).join('')}
                       </div>
                     </div>
                   `).join('') : `
