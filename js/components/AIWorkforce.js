@@ -74,7 +74,7 @@ export function renderAIWorkforce(containerEl) {
               const log = visibleLogs[i];
               const line = document.createElement('div');
               line.className = `agent-term-line severity-${log.severity.toLowerCase()}`;
-              line.innerHTML = `<span class="agent-term-ts">${log.ts}</span> ${escapeHtml(log.message)}`;
+              line.innerHTML = `<span class="agent-term-ts">${log.ts}</span><span class="agent-term-msg">${escapeHtml(log.message)}</span>`;
               termBody.appendChild(line);
             }
 
@@ -154,7 +154,7 @@ export function renderAIWorkforce(containerEl) {
                 ${logs.length > 0
                   ? logs.slice(-10).map(log => `
                       <div class="agent-term-line severity-${log.severity.toLowerCase()}">
-                        <span class="agent-term-ts">${log.ts}</span> ${escapeHtml(log.message)}
+                        <span class="agent-term-ts">${log.ts}</span><span class="agent-term-msg">${escapeHtml(log.message)}</span>
                       </div>
                     `).join('')
                   : `<div class="agent-term-idle"><span class="agent-term-cursor">▮</span> Awaiting task assignment...</div>`
