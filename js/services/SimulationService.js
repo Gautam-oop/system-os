@@ -150,16 +150,39 @@ export class SimulationService {
     this.store.state.agents = [...agentService.getAgents()];
     this.store.notify("agentsUpdated", this.store.state.agents);
 
-    // 2. Automatically Move Kanban Tasks every tick
+    // 2. Automatically Move & Advance Task Sub-task Steps every tick
+    (this.store.state.tasks || []).forEach(task => {
+      if (task.status === 'ai_executing' || task.status === 'in_progress') {
+        task.progress = Math.min(95, (task.progress || 20) + Math.floor(Math.random() * 6 + 3));
+        if (task.subtasks && task.subtasks.length > 0) {
+          if (task.progress > 40 && task.subtasks[0]) {
+            task.subtasks[0].done = true;
+            task.subtasks[0].status = 'completed';
+            if (task.subtasks[1] && task.subtasks[1].status !== 'completed') task.subtasks[1].status = 'executing';
+          }
+          if (task.progress > 75 && task.subtasks[1]) {
+            task.subtasks[1].done = true;
+            task.subtasks[1].status = 'completed';
+            if (task.subtasks[2] && task.subtasks[2].status !== 'completed') task.subtasks[2].status = 'executing';
+          }
+          if (task.progress >= 95 && task.subtasks[2]) {
+            task.subtasks[2].done = true;
+            task.subtasks[2].status = 'completed';
+            task.status = 'completed';
+          }
+        }
+      }
+    });
+
     if (this.kanbanMoves.length > 0) {
       const move = this.kanbanMoves[this.kanbanMoveIndex];
       const task = (this.store.state.tasks || []).find(t => t.id === move.taskId);
       if (task) {
         task.status = move.status;
-        this.store.notify("tasksUpdated", this.store.state.tasks);
       }
       this.kanbanMoveIndex = (this.kanbanMoveIndex + 1) % this.kanbanMoves.length;
     }
+    this.store.notify("tasksUpdated", this.store.state.tasks);
 
     // 3. Gradually Increase Mission Progress (68% -> 70% -> 73% -> ... -> 100%)
     if (this.store.state.mission) {

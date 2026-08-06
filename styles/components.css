@@ -1169,6 +1169,154 @@
   cursor: pointer;
 }
 
+/* ─── 11. MAIN DASHBOARD TASK TILES ────────────────────────────── */
+.task-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.task-tile-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 280px;
+}
+
+.task-tile-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px -8px rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.task-tile-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.task-tile-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.task-tile-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #09090b;
+  line-height: 1.35;
+  margin: 0 0 1.25rem 0;
+  letter-spacing: -0.01em;
+}
+
+.task-tile-agent-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(241, 245, 249, 0.7);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.task-tile-agent-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-tile-agent-info .agent-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #09090b;
+}
+
+.task-tile-agent-info .agent-role {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-family: var(--font-mono);
+}
+
+.task-subtask-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.task-subtask-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.task-subtask-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.task-subtask-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.task-subtask-item.completed {
+  color: #09090b;
+}
+
+.task-subtask-item.executing {
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.subtask-icon {
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.task-subtask-item.completed .subtask-icon {
+  color: #10b981;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #6366f1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  animation: pulse-execute 1.5s infinite;
+}
+
+.empty-dot {
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+}
+
+@keyframes pulse-execute {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
 
 
 

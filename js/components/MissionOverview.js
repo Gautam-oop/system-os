@@ -8,7 +8,8 @@ import { animateCounter, animateProgressBar } from '../animations.js';
 export function renderMissionOverview(containerEl) {
   const state = store.getState();
   const mission = state.mission || {};
-  const agents = state.agents || [];
+  const tasks = state.tasks || [];
+  const objectives = mission.objectives || [];
   const logs = state.activityLogs || [];
 
   const progressVal = mission.overallProgress || 68;
@@ -32,27 +33,21 @@ export function renderMissionOverview(containerEl) {
     const statPending = containerEl.querySelector('#ostat-pending');
     if (statPending) animateCounter(statPending, pendingVal, '', '');
 
-    // Update AI Workforce rows in place
-    agents.forEach(agent => {
-      const row = containerEl.querySelector(`[data-node-agent-id="${agent.id}"]`);
-      if (row) {
-        // Update task description
-        const taskText = row.querySelector('.agent-node-task');
-        if (taskText) taskText.textContent = agent.currentTask || 'Simulating...';
+    // Update Project Tiles in place
+    objectives.forEach(obj => {
+      const tile = containerEl.querySelector(`[data-project-id="${obj.id}"]`);
+      if (tile) {
+        const fill = tile.querySelector('.progress-bar-fill');
+        if (fill) animateProgressBar(fill, obj.progressPercentage || 0);
 
-        // Update status badge
-        const badge = row.querySelector('.agent-node-status-badge');
-        if (badge) {
-          badge.className = `badge agent-node-status-badge ${getAgentBadgeClass(agent.status)}`;
-          badge.innerHTML = `<span class="status-dot ${agent.status === 'Idle' ? 'idle' : 'active'}"></span> ${agent.status}`;
-        }
+        const pct = tile.querySelector('.task-node-pct');
+        if (pct) pct.textContent = `${obj.progressPercentage || 0}%`;
 
-        // Update progress bar
-        const fill = row.querySelector('.progress-bar-fill');
-        if (fill) animateProgressBar(fill, agent.progress || 0);
-
-        const pct = row.querySelector('.agent-node-pct');
-        if (pct) pct.textContent = `${agent.progress || 0}%`;
+        // We could also dynamically update tasks inside the project here,
+        // but for now, we rely on full re-renders for new tasks
+      } else {
+        renderMissionOverview(containerEl, true);
+        return;
       }
     });
 
@@ -81,6 +76,17 @@ export function renderMissionOverview(containerEl) {
     return;
   }
 
+  // Group tasks by project (Mocking assignment by index for now if objectiveId is missing)
+  const tasksByProject = {};
+  objectives.forEach(obj => tasksByProject[obj.id] = []);
+  tasks.forEach((task, index) => {
+    // If no explicit objectiveId, distribute them
+    const targetObj = task.objectiveId ? objectives.find(o => o.id === task.objectiveId) : objectives[index % objectives.length];
+    if (targetObj) {
+      tasksByProject[targetObj.id].push(task);
+    }
+  });
+
   // Initial grand desktop view layout
   containerEl.innerHTML = `
     <!-- Large OS Header -->
@@ -96,63 +102,76 @@ export function renderMissionOverview(containerEl) {
     <!-- Immersive Desktop Container -->
     <div class="os-centerpiece-container">
       
-      <!-- Left: Large AI Workforce Control Center (Most of the screen) -->
+      <!-- Left: Active Engineering Project Tiles -->
       <div class="glass-panel os-workforce-stage no-hover">
         <div class="stage-title-row">
           <h2 class="stage-heading">
             <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2.5" viewBox="0 0 24 24">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
-            AI Active Workforce nodes
+            Active Projects & Objectives
           </h2>
           <span class="badge badge-cyan" id="os-prog-text">${progressVal}% Complete</span>
         </div>
 
-        <div class="progress-bar-bg" style="height: 8px; margin-top: -0.5rem;">
+        <div class="progress-bar-bg" style="height: 8px; margin-top: -0.5rem; margin-bottom: 1.5rem;">
           <div class="progress-bar-fill hero-progress-fill" style="width: 0%;"></div>
         </div>
 
-        <!-- Node Rows -->
-        <div class="agent-node-list">
-          ${agents.map(agent => `
-            <div class="agent-node-row" data-node-agent-id="${agent.id}">
-              <!-- Avatar -->
-              <div class="agent-node-avatar" style="background: ${agent.avatarBg}; color: ${agent.avatarColor};">
-                ${agent.name.substring(0, 2).toUpperCase()}
+        <!-- Project Tiles Grid -->
+        <div class="task-tiles-grid">
+          ${objectives.length > 0 ? objectives.map(obj => {
+            const projectTasks = tasksByProject[obj.id] || [];
+            
+            return `
+            <div class="task-tile-card" data-project-id="${obj.id}">
+              
+              <div class="task-tile-header">
+                <span class="task-tile-id">[${obj.code}]</span>
+                <span class="badge ${obj.status === 'IN_PROGRESS' ? 'badge-cyan' : obj.status === 'COMPLETED' ? 'badge-emerald' : 'badge-secondary'}">
+                  ${obj.status.replace('_', ' ').toUpperCase()}
+                </span>
               </div>
 
-              <!-- Profile Details -->
-              <div class="agent-node-info">
-                <div class="agent-node-meta">
-                  <span class="agent-node-name">${agent.name}</span>
-                  <span class="agent-node-role">${agent.role}</span>
+              <h3 class="task-tile-title">${obj.name}</h3>
+
+              <div class="task-subtask-section">
+                <div class="task-subtask-header">Tasks Happening for this Project:</div>
+                <div class="task-subtask-list" style="margin-top: 0.25rem;">
+                  ${projectTasks.length > 0 ? projectTasks.map(task => `
+                    <div class="task-subtask-item ${task.status === 'ai_executing' || task.status === 'in_progress' ? 'executing' : task.status === 'completed' ? 'completed' : ''}">
+                      <div class="subtask-icon">
+                        ${task.status === 'completed' ? '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>' : (task.status === 'ai_executing' || task.status === 'in_progress' ? '<div class="pulse-dot"></div>' : '<div class="empty-dot"></div>')}
+                      </div>
+                      <div style="display:flex; flex-direction:column; margin-left: 0.25rem;">
+                        <span class="subtask-title" style="font-weight: 600; color: #1e293b;">${task.title}</span>
+                        <span style="font-size: 0.65rem; color: #64748b; font-family: var(--font-mono); margin-top: 0.15rem;">
+                          Assigned to: <span style="color: ${task.status === 'completed' ? '#10b981' : '#6366f1'};">${task.assignedAgentName || 'Agent'}</span>
+                        </span>
+                      </div>
+                    </div>
+                  `).join('') : `
+                    <div style="font-size: 0.8rem; color: #94a3b8; font-style: italic; padding: 0.5rem 0;">No active tasks assigned yet.</div>
+                  `}
                 </div>
-                <div class="agent-node-task">${agent.currentTask || 'Awaiting assignment...'}</div>
               </div>
 
-              <!-- Animated progress fill -->
-              <div class="agent-node-progress">
+              <div class="agent-node-progress" style="margin-top: auto; padding-top: 1rem;">
                 <div style="display:flex;justify-content:space-between;font-size:0.7rem;font-family:var(--font-mono);color:var(--text-tertiary);">
-                  <span>PROGRESS</span>
-                  <span class="agent-node-pct">${agent.progress || 0}%</span>
+                  <span>PROJECT PROGRESS</span>
+                  <span class="task-node-pct">${obj.progressPercentage || 0}%</span>
                 </div>
-                <div class="progress-bar-bg" style="height:4px;">
+                <div class="progress-bar-bg" style="height:5px; margin-top: 0.35rem;">
                   <div class="progress-bar-fill" style="width:0%;"></div>
                 </div>
               </div>
 
-              <!-- Status Badge -->
-              <div class="agent-node-status">
-                <span class="badge agent-node-status-badge ${getAgentBadgeClass(agent.status)}">
-                  <span class="status-dot ${agent.status === 'Idle' ? 'idle' : 'active'}"></span>
-                  ${agent.status}
-                </span>
-              </div>
             </div>
-          `).join('')}
+          `}).join('') : `
+            <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; border: 1px dashed rgba(0,0,0,0.1); border-radius: 12px; grid-column: 1 / -1;">
+              No active projects found.
+            </div>
+          `}
         </div>
       </div>
 
@@ -196,25 +215,15 @@ export function renderMissionOverview(containerEl) {
     const heroFill = containerEl.querySelector('.hero-progress-fill');
     if (heroFill) animateProgressBar(heroFill, progressVal);
 
-    agents.forEach(agent => {
-      const row = containerEl.querySelector(`[data-node-agent-id="${agent.id}"]`);
-      if (row) {
-        const fill = row.querySelector('.progress-bar-fill');
-        if (fill) animateProgressBar(fill, agent.progress || 0);
+    objectives.forEach(obj => {
+      const tile = containerEl.querySelector(`[data-project-id="${obj.id}"]`);
+      if (tile) {
+        const fill = tile.querySelector('.progress-bar-fill');
+        if (fill) animateProgressBar(fill, obj.progressPercentage || 0);
       }
     });
 
     const termBody = containerEl.querySelector('#os-terminal-body');
     if (termBody) termBody.scrollTop = termBody.scrollHeight;
   }, 50);
-}
-
-function getAgentBadgeClass(status) {
-  switch (status) {
-    case 'Working': return 'badge-cyan';
-    case 'Planning': return 'badge-purple';
-    case 'Reviewing': return 'badge-amber';
-    case 'Completed': return 'badge-emerald';
-    default: return 'badge-secondary';
-  }
 }

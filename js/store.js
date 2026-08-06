@@ -169,10 +169,45 @@ class MissionStore {
 
   addNewTask(taskData) {
     const newId = `TSK-${200 + this.state.tasks.length}`;
-    const newTask = { id: newId, ...taskData, subtasks: [] };
+    
+    // Auto-generate executing sub-task steps for this task
+    const subtasks = [
+      { id: `${newId}-sub-1`, title: 'Ingest Specification & Design Tokens', done: true, status: 'completed' },
+      { id: `${newId}-sub-2`, title: 'Autonomous Implementation & Code Generation', done: false, status: 'executing' },
+      { id: `${newId}-sub-3`, title: 'Automated Unit Tests & Security Audit', done: false, status: 'pending' }
+    ];
+
+    const newTask = {
+      id: newId,
+      title: taskData.title || 'New Engineering Objective',
+      assignedAgentId: taskData.assignedAgentId || 'agent-aura',
+      assignedAgentName: taskData.assignedAgentName || 'Aura',
+      priority: taskData.priority || 'high',
+      status: 'ai_executing',
+      progress: 35,
+      subtasks: taskData.subtasks || subtasks,
+      createdAt: new Date().toISOString()
+    };
+
     this.state.tasks.unshift(newTask);
+
+    // Also update assigned agent status to Working on this task
+    const agent = (this.state.agents || []).find(a => a.id === newTask.assignedAgentId);
+    if (agent) {
+      agent.status = 'Working';
+      agent.currentTask = `[${newId}] ${newTask.title}`;
+      agent.progress = 35;
+    }
+
+    this.addActivityLog({
+      agentName: newTask.assignedAgentName,
+      message: `[${newId}] Executing new task: ${newTask.title}`,
+      category: 'WORKFLOW'
+    });
+
     this.notify('tasksUpdated', this.state.tasks);
-    this.notify('toast', { type: 'success', text: `Task ${newId} created!` });
+    this.notify('agentsUpdated', this.state.agents);
+    this.notify('toast', { type: 'success', text: `[${newId}] Created and assigned to ${newTask.assignedAgentName}!` });
   }
 }
 
