@@ -72,9 +72,10 @@ export function renderAIWorkforce(containerEl) {
             const startIdx = Math.max(0, existingCount);
             for (let i = startIdx; i < visibleLogs.length; i++) {
               const log = visibleLogs[i];
+              const severity = (log.severity || 'INFO').toLowerCase();
               const line = document.createElement('div');
-              line.className = `agent-term-line severity-${log.severity.toLowerCase()}`;
-              line.innerHTML = `<span class="agent-term-ts">${log.ts}</span><span class="agent-term-msg">${escapeHtml(log.message)}</span>`;
+              line.className = `agent-term-line severity-${severity}`;
+              line.innerHTML = `<span class="agent-term-ts">${log.ts || ''}</span><span class="agent-term-msg">${escapeHtml(log.message)}</span>`;
               termBody.appendChild(line);
             }
 
@@ -153,8 +154,8 @@ export function renderAIWorkforce(containerEl) {
               <div class="agent-term-body">
                 ${logs.length > 0
                   ? logs.slice(-10).map(log => `
-                      <div class="agent-term-line severity-${log.severity.toLowerCase()}">
-                        <span class="agent-term-ts">${log.ts}</span><span class="agent-term-msg">${escapeHtml(log.message)}</span>
+                      <div class="agent-term-line severity-${(log.severity || 'INFO').toLowerCase()}">
+                        <span class="agent-term-ts">${log.ts || ''}</span><span class="agent-term-msg">${escapeHtml(log.message)}</span>
                       </div>
                     `).join('')
                   : `<div class="agent-term-idle"><span class="agent-term-cursor">▮</span> Awaiting task assignment...</div>`
@@ -227,5 +228,6 @@ function getAgentBadgeClass(status) {
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

@@ -18,6 +18,7 @@ import { renderMissionReport } from './components/MissionReport.js';
 import { renderModalHost } from './components/CommandPaletteModal.js';
 import { showOnboardingTutorial } from './components/OnboardingModal.js';
 import { showUserProfileModal } from './components/UserProfileModal.js';
+import { showMissionCompleteOverlay } from './components/MissionCompleteOverlay.js';
 import {
   animatePageTransition,
   animateStaggeredEntrance,
@@ -158,6 +159,7 @@ function initApp() {
   // ─── MISSION COMPLETION ──────────────────────────────────────────────
   store.subscribe('missionCompleted', () => {
     if (sidebarEl) renderSidebar(sidebarEl);
+    showMissionCompleteOverlay();
   });
 
   // Ctrl+K spotlight
