@@ -165,6 +165,24 @@ function renderTaskCard(task) {
       <div class="task-title">${task.title}</div>
 
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.75rem;">
+      ${
+  task.assignedAgents?.length
+    ? `
+      <div style="margin-top:10px;font-size:12px;">
+        ${task.assignedAgents
+          .map(
+            agent => `
+              <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                <span>🤖 ${agent.name}</span>
+                <span>${agent.task}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    `
+    : ""
+}
         <div class="task-agent-chip">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>

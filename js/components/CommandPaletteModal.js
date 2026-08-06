@@ -176,9 +176,18 @@ function renderNewTaskModal(containerEl) {
     e.preventDefault();
     const title = containerEl.querySelector('#task-title-input').value;
     const priority = containerEl.querySelector('#task-priority-select').value;
+    const cleanTitle = title.trim();
+
+if (
+  cleanTitle.length < 15 ||
+  cleanTitle.split(/\s+/).length < 4
+) {
+  alert("Please describe the task in more detail.");
+  return;
+}
 
     store.addNewTask({
-      title,
+      title: cleanTitle,
       assignedAgentId: 'auto',
       priority,
       status: 'ai_executing'

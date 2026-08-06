@@ -163,7 +163,20 @@ class MissionStore {
   }
 
   async addNewTask(taskData) {
-    // Auto-generate realistic 5-phase development lifecycle for this task
+const title = (taskData.title || "").trim();
+
+if (
+  title.length < 15 ||
+  title.split(" ").length < 4
+) {
+  this.notify('toast', {
+    type: 'error',
+    text: 'Please describe the task in more detail.'
+  });
+  return;
+}
+
+// Auto-generate realistic 5-phase development lifecycle for this task
     const subtasks = [
       { id: `temp-sub-1`, title: 'Context & Planning', done: false, status: 'pending' },
       { id: `temp-sub-2`, title: 'Implementation', done: false, status: 'pending' },
@@ -207,11 +220,29 @@ class MissionStore {
 
       // Integrate created task into state
       const taskObj = {
-        ...savedTask,
-        progress: 0,
-        objectiveId: taskData.objectiveId || null
-      };
+const taskObj = {
+  ...savedTask,
+  progress: 0,
+  objectiveId: taskData.objectiveId || null,
 
+  assignedAgents: [
+    {
+      name: finalAgentName,
+      task: "Planning & Execution",
+      status: "Working"
+    },
+    {
+      name: "Spectre",
+      task: "Testing",
+      status: "Pending"
+    },
+    {
+      name: "Titan",
+      task: "Backend Review",
+      status: "Pending"
+    }
+  ]
+};
       this.state.tasks.unshift(taskObj);
 
       // Update assigned agent status
