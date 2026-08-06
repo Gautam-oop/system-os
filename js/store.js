@@ -163,27 +163,33 @@ class MissionStore {
   }
 
   async addNewTask(taskData) {
-    // Auto-generate executing sub-task steps for this task
+    // Auto-generate realistic 5-phase development lifecycle for this task
     const subtasks = [
-      { id: `temp-sub-1`, title: 'Ingest Specification & Design Tokens', done: true, status: 'completed' },
-      { id: `temp-sub-2`, title: 'Autonomous Implementation & Code Generation', done: false, status: 'executing' },
-      { id: `temp-sub-3`, title: 'Automated Unit Tests & Security Audit', done: false, status: 'pending' }
+      { id: `temp-sub-1`, title: 'Context & Planning', done: false, status: 'pending' },
+      { id: `temp-sub-2`, title: 'Implementation', done: false, status: 'pending' },
+      { id: `temp-sub-3`, title: 'Localhost Dev & Testing', done: false, status: 'pending' },
+      { id: `temp-sub-4`, title: 'QA Verification', done: false, status: 'pending' },
+      { id: `temp-sub-5`, title: 'Production Deployment', done: false, status: 'pending' }
     ];
 
     // Intelligent AI Agent Routing Logic
     let autoAgentId = 'agent-nexus';
     let autoAgentName = 'Nexus';
+    let specialtyMatch = 'Vector Indexing & General LLM Processing';
     const titleLower = (taskData.title || '').toLowerCase();
 
     if (titleLower.match(/ui|ux|frontend|design|css|html|react|component|style|view|page|button/)) {
       autoAgentId = 'agent-aura';
       autoAgentName = 'Aura';
+      specialtyMatch = 'React/Vite Architecture & Design System UI';
     } else if (titleLower.match(/api|backend|database|sql|db|server|route|logic|microservice|data|auth/)) {
       autoAgentId = 'agent-titan';
       autoAgentName = 'Titan';
+      specialtyMatch = 'Go/Python Microservices & PostgreSQL Indexing';
     } else if (titleLower.match(/test|qa|security|audit|bug|fix|error|deploy|pipeline|ci\/cd|kubernetes/)) {
       autoAgentId = 'agent-spectre';
       autoAgentName = 'Spectre';
+      specialtyMatch = 'Playwright/Cypress Automation & Regression Testing';
     }
 
     const finalAgentId = taskData.assignedAgentId === 'auto' ? autoAgentId : (taskData.assignedAgentId || autoAgentId);
@@ -202,7 +208,7 @@ class MissionStore {
       // Integrate created task into state
       const taskObj = {
         ...savedTask,
-        progress: 35,
+        progress: 0,
         objectiveId: taskData.objectiveId || null
       };
 
@@ -213,13 +219,13 @@ class MissionStore {
       if (agent) {
         agent.status = 'Working';
         agent.currentTask = `[${taskObj.id}] ${taskObj.title}`;
-        agent.progress = 35;
+        agent.progress = 0;
       }
 
       this.addActivityLog({
-        agentName: taskObj.assignedAgentName,
-        message: `[${taskObj.id}] Executing new task: ${taskObj.title}`,
-        category: 'WORKFLOW'
+        agentName: 'System Manager',
+        message: `Assigned "${taskObj.title}" to ${taskObj.assignedAgentName} based on specialty: [${specialtyMatch}].`,
+        category: 'SYSTEM'
       });
 
       this.notify('tasksUpdated', this.state.tasks);
