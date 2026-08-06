@@ -19,7 +19,6 @@ export function renderMissionOverview(containerEl, forceRender = false) {
   // Group tasks by project
   const tasksByProject = {};
   const displayObjectives = [...objectives];
-  let hasIndependentTasks = false;
 
   objectives.forEach(obj => tasksByProject[obj.id] = []);
   
@@ -27,18 +26,16 @@ export function renderMissionOverview(containerEl, forceRender = false) {
     if (task.objectiveId && tasksByProject[task.objectiveId]) {
       tasksByProject[task.objectiveId].push(task);
     } else {
-      if (!hasIndependentTasks) {
-        hasIndependentTasks = true;
-        tasksByProject['independent_tasks'] = [];
-        displayObjectives.push({
-          id: 'independent_tasks',
-          code: 'GEN-000',
-          name: 'General Backlog & Ad-Hoc Tasks',
-          status: 'IN_PROGRESS',
-          progressPercentage: 50
-        });
-      }
-      tasksByProject['independent_tasks'].push(task);
+      // Promote independent task to a full Project Tile
+      const pseudoObjId = `pseudo_${task.id}`;
+      displayObjectives.unshift({
+        id: pseudoObjId,
+        code: task.id,
+        name: task.title,
+        status: task.status === 'ai_executing' ? 'IN_PROGRESS' : task.status.toUpperCase(),
+        progressPercentage: task.progress || 25
+      });
+      tasksByProject[pseudoObjId] = [task];
     }
   });
 
