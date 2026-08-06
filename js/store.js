@@ -134,9 +134,16 @@ class MissionStore {
     this.notify('modalChanged', { type: 'agent-detail', agentId });
   }
 
+  openTaskModal(taskId) {
+    this.selectedTaskId = taskId;
+    this.activeModal = 'task-detail';
+    this.notify('modalChanged', { type: 'task-detail', taskId });
+  }
+
   closeModal() {
     this.activeModal = null;
     this.selectedAgentId = null;
+    this.selectedTaskId = null;
     this.notify('modalChanged', null);
   }
 
