@@ -16,7 +16,7 @@ import { renderTimelineView } from './components/TimelineView.js';
 import { renderAnalyticsCards } from './components/AnalyticsCards.js';
 import { renderMissionReport } from './components/MissionReport.js';
 import { renderModalHost } from './components/CommandPaletteModal.js';
-import { showMissionCompleteOverlay } from './components/MissionCompleteOverlay.js';
+import { showOnboardingTutorial } from './components/OnboardingModal.js';
 import {
   animatePageTransition,
   animateStaggeredEntrance,
@@ -155,11 +155,8 @@ function initApp() {
   });
 
   // ─── MISSION COMPLETION ──────────────────────────────────────────────
-
   store.subscribe('missionCompleted', () => {
-    console.log('[missionOS] Mission completed event received! Showing overlay...');
     if (sidebarEl) renderSidebar(sidebarEl);
-    showMissionCompleteOverlay();
   });
 
   // Ctrl+K spotlight
@@ -176,6 +173,12 @@ function initApp() {
   // ─── Event Delegation for Navbar Clicks ──────────────────────────────
   if (navbarEl) {
     navbarEl.addEventListener('click', (e) => {
+      const tutorialBtn = e.target.closest('#tutorial-trigger');
+      if (tutorialBtn) {
+        showOnboardingTutorial(true);
+        return;
+      }
+
       const searchBtn = e.target.closest('#navbar-search-trigger');
       if (searchBtn) {
         store.notify('openModal', { type: 'command-palette' });
@@ -221,6 +224,11 @@ function initApp() {
     // Boot store
     console.log('[missionOS] Subscriptions wired. Calling store.boot()...');
     store.boot();
+
+    // Trigger onboarding tutorial for new users or when requested
+    setTimeout(() => {
+      showOnboardingTutorial(false);
+    }, 400);
   }
 
   function showAuthScreen() {

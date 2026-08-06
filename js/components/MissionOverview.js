@@ -87,9 +87,9 @@ export function renderMissionOverview(containerEl) {
     <div class="os-canvas-header animate-fade-in">
       <div class="mission-tag" style="justify-content: center;">
         <span class="status-dot active"></span>
-        <span>${mission.codeName || 'PROJECT ALPHA'}</span>
+        <span>${mission.codeName || 'MISSIONOS CORE'}</span>
       </div>
-      <h1 class="os-mission-title">${mission.name || 'Project Alpha (SaaS OS)'}</h1>
+      <h1 class="os-mission-title">${mission.name || 'missionOS (Autonomous AI Engineering OS)'}</h1>
       <p class="os-mission-subtitle">${mission.description || 'Managing autonomous AI software engineers for high-velocity project execution.'}</p>
     </div>
 

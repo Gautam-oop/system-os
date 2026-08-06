@@ -12,8 +12,8 @@ export const MOCK_API_RESPONSE = {
     },
     data: {
       id: 'prj_9021_alpha',
-      codeName: 'PROJECT ALPHA (SAAS OS)',
-      name: 'Project Alpha (SaaS OS)',
+      codeName: 'MISSIONOS CORE',
+      name: 'missionOS (Autonomous AI Engineering OS)',
       status: 'Sprint 14 in Progress',
       commanderId: 'emp_001',
       startedAt: '2026-08-01T06:00:00.000Z',

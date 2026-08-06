@@ -69,12 +69,6 @@ export function renderLanding(containerEl, onLaunchClick) {
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
           </button>
-          <button class="btn-secondary-demo" id="hero-demo-btn">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            Watch Simulation
-          </button>
         </div>
       </div>
 
@@ -433,25 +427,6 @@ export function renderLanding(containerEl, onLaunchClick) {
       </div>
     </footer>
 
-    <!-- Demo Modal Backdrop -->
-    <div class="demo-modal-overlay" id="demo-modal" style="display: none;">
-      <div class="demo-modal-content">
-        <button class="demo-modal-close" id="demo-close-btn">
-          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-        <div class="demo-modal-header">
-          <h3>Simulation Terminal</h3>
-          <p style="font-size: 0.85rem; color: #a1a1aa; margin: 0;">Watch missionOS AI Workforce build a SaaS application in real-time</p>
-        </div>
-        <div class="demo-modal-body" id="demo-console">
-          <div class="demo-console-line"><span class="demo-console-prompt">$</span> init-workforce --mission "saas-platform"</div>
-          <div class="demo-console-line">[*] Connecting to missionOS Hive... Connected.</div>
-        </div>
-      </div>
-    </div>
   `;
 
   // Initialize interactive tab switchers and animation engines

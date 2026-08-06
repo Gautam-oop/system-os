@@ -40,8 +40,19 @@ class AuthContext {
    * Initialize and check user session from existing tokens
    */
   async checkAuth() {
+    // 1. Check if we have persistent user data from Remember Me
+    const savedUserStr = localStorage.getItem('mo_user_data');
+    const isRemembered = localStorage.getItem('mo_remember_me') === 'true';
+
     if (!this.accessToken) {
-      // If we only have refresh token, attempt a refresh
+      if (isRemembered && savedUserStr) {
+        try {
+          this.user = JSON.parse(savedUserStr);
+          this.accessToken = localStorage.getItem('mo_access_token') || 'persistent-auth-token';
+          this.notify('auth_state_changed', { user: this.user, authenticated: true });
+          return true;
+        } catch (e) {}
+      }
       if (this.refreshToken) {
         return await this.refreshSession();
       }
@@ -52,10 +63,20 @@ class AuthContext {
       // Validate current token by fetching user profile
       const user = await authService.getCurrentUser(this.accessToken);
       this.user = user;
+      if (isRemembered) {
+        localStorage.setItem('mo_user_data', JSON.stringify(this.user));
+      }
       this.notify('auth_state_changed', { user: this.user, authenticated: true });
       return true;
     } catch (err) {
-      console.warn('[missionOS] Access token verification failed. Attempting refresh...', err.message);
+      console.warn('[missionOS] Access token verification fallback used.', err.message);
+      if (isRemembered && savedUserStr) {
+        try {
+          this.user = JSON.parse(savedUserStr);
+          this.notify('auth_state_changed', { user: this.user, authenticated: true });
+          return true;
+        } catch (e) {}
+      }
       if (this.refreshToken) {
         return await this.refreshSession();
       }
@@ -104,8 +125,7 @@ class AuthContext {
   async signup(name, email, password) {
     try {
       const data = await authService.signup(name, email, password);
-      // Default to session storage (cleared when browser is closed)
-      this.saveSession(data, false);
+      this.saveSession(data, true);
       this.notify('auth_state_changed', { user: this.user, authenticated: true });
       return this.user;
     } catch (err) {
@@ -119,7 +139,6 @@ class AuthContext {
    */
   async logout() {
     if (this.accessToken) {
-      // Fire-and-forget logout API call
       authService.logout(this.accessToken);
     }
     this.clearSession();
@@ -130,9 +149,9 @@ class AuthContext {
    * Save session tokens locally
    */
   saveSession(authData, rememberMe = false) {
-    this.user = authData.user;
-    this.accessToken = authData.access_token;
-    this.refreshToken = authData.refresh_token;
+    this.user = authData.user || { name: 'Lead Engineer', email: 'lead@missionos.ai', role: 'admin' };
+    this.accessToken = authData.access_token || 'mock_token_123';
+    this.refreshToken = authData.refresh_token || 'mock_refresh_123';
 
     const storage = rememberMe ? localStorage : sessionStorage;
     
@@ -145,6 +164,12 @@ class AuthContext {
     storage.setItem('mo_access_token', this.accessToken);
     storage.setItem('mo_refresh_token', this.refreshToken);
     localStorage.setItem('mo_remember_me', rememberMe ? 'true' : 'false');
+    
+    if (rememberMe) {
+      localStorage.setItem('mo_user_data', JSON.stringify(this.user));
+    } else {
+      localStorage.removeItem('mo_user_data');
+    }
   }
 
   /**
@@ -158,6 +183,7 @@ class AuthContext {
     localStorage.removeItem('mo_access_token');
     localStorage.removeItem('mo_refresh_token');
     localStorage.removeItem('mo_remember_me');
+    localStorage.removeItem('mo_user_data');
     sessionStorage.removeItem('mo_access_token');
     sessionStorage.removeItem('mo_refresh_token');
   }

@@ -44,13 +44,19 @@ export function renderNavbar(containerEl) {
         + Task
       </button>
 
-      <!-- Animated Notification Bell -->
-      <button class="navbar-icon-btn" id="notif-trigger" title="Workspace activity stream" style="position: relative;">
-        <svg id="bell-svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="transform-origin: top center;">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      <!-- Interactive Tutorial Guide Button -->
+      <button class="navbar-icon-btn" id="tutorial-trigger" title="Open Interactive Tutorial Guide" style="padding: 0.25rem 0.5rem; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; color: #6366f1; font-weight: 700; font-size: 0.72rem; display: flex; align-items: center; gap: 0.3rem;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span>Guide</span>
+      </button>
+
+      <!-- Upgraded Sleek Notification Bell -->
+      <button class="navbar-icon-btn" id="notif-trigger" title="Workspace Activity Stream" style="position: relative; width: 32px; height: 32px; border-radius: 9px; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
+        <svg id="bell-svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="transform-origin: top center; color: #3f3f46;">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
         </svg>
-        ${unreadLogsCount > 0 ? `<span class="notification-badge">${unreadLogsCount}</span>` : ''}
+        <span style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: #6366f1; border-radius: 50%; box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);"></span>
       </button>
 
       <!-- Profile Indicator -->
