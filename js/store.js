@@ -162,6 +162,17 @@ class MissionStore {
     this.notify('activityLogsUpdated', this.state.activityLogs);
   }
 
+  addAgentLog(agentId, message, severity = 'INFO') {
+    const agent = (this.state.agents || []).find(a => a.id === agentId);
+    if (!agent) return;
+    if (!agent.detailLogs) agent.detailLogs = [];
+    const now = new Date();
+    const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    agent.detailLogs.push({ ts, message, severity });
+    if (agent.detailLogs.length > 50) agent.detailLogs.shift();
+    this.notify('agentsUpdated', this.state.agents);
+  }
+
   async addNewTask(taskData) {
     const title = (taskData.title || "").trim();
 

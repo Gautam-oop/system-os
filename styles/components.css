@@ -1318,5 +1318,140 @@
 }
 
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   AGENT EMBEDDED LIVE TERMINAL — Shows real-time per-agent activity logs
+   ═══════════════════════════════════════════════════════════════════════════ */
 
+.agent-terminal {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0a0a0f;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.agent-term-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  background: #141419;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.agent-term-dots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.term-dot-r, .term-dot-y, .term-dot-g {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.term-dot-r { background: #ef4444; }
+.term-dot-y { background: #f59e0b; }
+.term-dot-g { background: #22c55e; }
+
+.agent-term-title {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: #52525b;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.agent-term-body {
+  padding: 0.6rem 0.75rem;
+  min-height: 140px;
+  max-height: 180px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.65;
+  color: #a1a1aa;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for terminal */
+.agent-term-body::-webkit-scrollbar {
+  width: 4px;
+}
+.agent-term-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.agent-term-body::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 4px;
+}
+.agent-term-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.45);
+}
+
+.agent-term-line {
+  animation: term-line-appear 0.2s ease-out both;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-term-line.severity-info {
+  color: #a1a1aa;
+}
+
+.agent-term-line.severity-warn {
+  color: #fbbf24;
+}
+
+.agent-term-line.severity-success {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.agent-term-line.severity-error {
+  color: #f87171;
+}
+
+.agent-term-ts {
+  color: #3f3f46;
+  margin-right: 0.35rem;
+  font-size: 0.65rem;
+}
+
+.agent-term-idle {
+  color: #3f3f46;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 2rem 0;
+  justify-content: center;
+}
+
+.agent-term-cursor {
+  animation: blink-cursor 1s step-end infinite;
+  color: #6366f1;
+  font-style: normal;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes term-line-appear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
