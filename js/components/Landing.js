@@ -43,10 +43,6 @@ export function renderLanding(containerEl, onLaunchClick) {
           <a href="#velocity-stats" class="landing-nav-link">Telemetry</a>
           <a href="#ecosystem-grid" class="landing-nav-link">Integrations</a>
         </nav>
-
-        <div class="landing-nav-action">
-          <a href="#" class="btn-glass" id="nav-launch-btn">Launch OS →</a>
-        </div>
       </header>
 
       <div class="landing-hero-center">
