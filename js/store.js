@@ -220,29 +220,28 @@ if (
 
       // Integrate created task into state
       const taskObj = {
-const taskObj = {
-  ...savedTask,
-  progress: 0,
-  objectiveId: taskData.objectiveId || null,
+        ...savedTask,
+        progress: 0,
+        objectiveId: taskData.objectiveId || null,
+        assignedAgents: [
+          {
+            name: finalAgentName,
+            task: "Planning & Execution",
+            status: "Working"
+          },
+          {
+            name: "Spectre",
+            task: "Testing",
+            status: "Pending"
+          },
+          {
+            name: "Titan",
+            task: "Backend Review",
+            status: "Pending"
+          }
+        ]
+      };
 
-  assignedAgents: [
-    {
-      name: finalAgentName,
-      task: "Planning & Execution",
-      status: "Working"
-    },
-    {
-      name: "Spectre",
-      task: "Testing",
-      status: "Pending"
-    },
-    {
-      name: "Titan",
-      task: "Backend Review",
-      status: "Pending"
-    }
-  ]
-};
       this.state.tasks.unshift(taskObj);
 
       // Update assigned agent status
