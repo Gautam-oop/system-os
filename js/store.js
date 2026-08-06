@@ -24,7 +24,12 @@ class MissionStore {
         currentSprint: "Sprint 14",
         sprintDaysRemaining: 3,
         description: "Next-generation AI Workforce Operating System for accelerating software engineering teams.",
-        objectives: []
+        objectives: [
+          { id: 'obj_01', code: 'FE-101', name: 'Frontend Design System & Accessibility', progressPercentage: 92, status: 'IN_PROGRESS', leadAgentId: 'agent-aura' },
+          { id: 'obj_02', code: 'BE-202', name: 'REST API Microservices & DB Pooling', progressPercentage: 65, status: 'IN_PROGRESS', leadAgentId: 'agent-titan' },
+          { id: 'obj_03', code: 'SEC-303', name: 'OAuth2 Authentication & Key Rotation', progressPercentage: 100, status: 'COMPLETED', leadAgentId: 'agent-cipher' },
+          { id: 'obj_04', code: 'OPS-404', name: 'Automated Kubernetes CI/CD Pipeline', progressPercentage: 40, status: 'IN_PROGRESS', leadAgentId: 'agent-vortex' }
+        ]
       },
       employees: [],
       agents: agentService.getAgents(),

@@ -5,7 +5,7 @@
 import { store } from '../store.js';
 import { animateCounter, animateProgressBar } from '../animations.js';
 
-export function renderMissionOverview(containerEl) {
+export function renderMissionOverview(containerEl, forceRender = false) {
   const state = store.getState();
   const mission = state.mission || {};
   const tasks = state.tasks || [];
@@ -18,7 +18,7 @@ export function renderMissionOverview(containerEl) {
 
   // In-place updates if already structured
   const existingProgText = containerEl.querySelector('#os-prog-text');
-  if (existingProgText) {
+  if (existingProgText && !forceRender) {
     existingProgText.textContent = `${progressVal}%`;
     const heroFill = containerEl.querySelector('.hero-progress-fill');
     if (heroFill) animateProgressBar(heroFill, progressVal);
