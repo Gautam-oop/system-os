@@ -16,6 +16,17 @@ export function renderMissionOverview(containerEl, forceRender = false) {
   const completedVal = mission.completedTasksCount || 428;
   const pendingVal = mission.pendingTasksCount || 14;
 
+  // Group tasks by project (Mocking assignment by index for now if objectiveId is missing)
+  const tasksByProject = {};
+  objectives.forEach(obj => tasksByProject[obj.id] = []);
+  tasks.forEach((task, index) => {
+    // If no explicit objectiveId, distribute them
+    const targetObj = task.objectiveId ? objectives.find(o => o.id === task.objectiveId) : objectives[index % objectives.length];
+    if (targetObj) {
+      tasksByProject[targetObj.id].push(task);
+    }
+  });
+
   // In-place updates if already structured
   const existingProgText = containerEl.querySelector('#os-prog-text');
   if (existingProgText && !forceRender) {
@@ -43,8 +54,26 @@ export function renderMissionOverview(containerEl, forceRender = false) {
         const pct = tile.querySelector('.task-node-pct');
         if (pct) pct.textContent = `${obj.progressPercentage || 0}%`;
 
-        // We could also dynamically update tasks inside the project here,
-        // but for now, we rely on full re-renders for new tasks
+        // Dynamically update tasks inside the project tile
+        const taskListContainer = tile.querySelector('.task-subtask-list');
+        if (taskListContainer) {
+          const projectTasks = tasksByProject[obj.id] || [];
+          taskListContainer.innerHTML = projectTasks.length > 0 ? projectTasks.map(task => `
+            <div class="task-subtask-item ${task.status === 'ai_executing' || task.status === 'in_progress' ? 'executing' : task.status === 'completed' ? 'completed' : ''}">
+              <div class="subtask-icon">
+                ${task.status === 'completed' ? '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>' : (task.status === 'ai_executing' || task.status === 'in_progress' ? '<div class="pulse-dot"></div>' : '<div class="empty-dot"></div>')}
+              </div>
+              <div style="display:flex; flex-direction:column; margin-left: 0.25rem;">
+                <span class="subtask-title" style="font-weight: 600; color: #1e293b;">${task.title}</span>
+                <span style="font-size: 0.65rem; color: #64748b; font-family: var(--font-mono); margin-top: 0.15rem;">
+                  Assigned to: <span style="color: ${task.status === 'completed' ? '#10b981' : '#6366f1'};">${task.assignedAgentName || 'Agent'}</span>
+                </span>
+              </div>
+            </div>
+          `).join('') : `
+            <div style="font-size: 0.8rem; color: #94a3b8; font-style: italic; padding: 0.5rem 0;">No active tasks assigned yet.</div>
+          `;
+        }
       } else {
         renderMissionOverview(containerEl, true);
         return;
@@ -76,16 +105,6 @@ export function renderMissionOverview(containerEl, forceRender = false) {
     return;
   }
 
-  // Group tasks by project (Mocking assignment by index for now if objectiveId is missing)
-  const tasksByProject = {};
-  objectives.forEach(obj => tasksByProject[obj.id] = []);
-  tasks.forEach((task, index) => {
-    // If no explicit objectiveId, distribute them
-    const targetObj = task.objectiveId ? objectives.find(o => o.id === task.objectiveId) : objectives[index % objectives.length];
-    if (targetObj) {
-      tasksByProject[targetObj.id].push(task);
-    }
-  });
 
   // Initial grand desktop view layout
   containerEl.innerHTML = `
