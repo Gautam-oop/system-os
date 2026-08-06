@@ -788,6 +788,387 @@
   color: #09090b;
 }
 
+/* ─── 10. USER PROFILE & TEAM COLLABORATION MODAL ─────────────────────── */
+.user-profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(9, 9, 11, 0.65);
+  backdrop-filter: blur(14px) saturate(190%);
+  -webkit-backdrop-filter: blur(14px) saturate(190%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fade-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.user-profile-modal {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  outline: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 28px;
+  width: 100%;
+  max-width: 860px;
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  overflow: hidden;
+  box-shadow: 0 32px 90px -16px rgba(15, 23, 42, 0.38), 0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+.profile-modal-sidebar {
+  background: rgba(241, 245, 249, 0.7);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.profile-user-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-avatar-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: #fff;
+  font-weight: 850;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.profile-name-text {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #09090b;
+}
+
+.profile-email-text {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-family: var(--font-mono);
+}
+
+.profile-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.profile-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.profile-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #09090b;
+}
+
+.profile-nav-btn.active {
+  background: #ffffff;
+  color: #6366f1;
+  font-weight: 750;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.profile-close-sidebar-btn {
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-close-sidebar-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Modal Body */
+.profile-modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: 520px;
+}
+
+.ptab-header {
+  margin-bottom: 1.5rem;
+}
+
+.ptab-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 850;
+  color: #09090b;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.25rem;
+}
+
+.ptab-header p {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.ptab-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.ptab-input, .ptab-select {
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: #09090b;
+  transition: all 0.2s ease;
+}
+
+.ptab-input:focus, .ptab-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.ptab-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 1rem 0;
+}
+
+.ptab-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary-ptab {
+  padding: 0.65rem 1.35rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.btn-primary-ptab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);
+}
+
+/* Team Collaboration Card */
+.collab-invite-box {
+  background: rgba(241, 245, 249, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.collab-invite-box h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #09090b;
+  margin: 0;
+}
+
+.invite-inputs {
+  display: grid;
+  grid-template-columns: 1fr 140px auto;
+  gap: 0.6rem;
+}
+
+.invite-share-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.invite-share-link code {
+  font-family: var(--font-mono);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  color: #6366f1;
+}
+
+.btn-sm-sec {
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Collaborators list */
+.collaborators-section h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #09090b;
+  margin-bottom: 0.85rem;
+}
+
+.collaborators-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.collaborator-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+
+.collab-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+  font-weight: 800;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collab-info {
+  flex: 1;
+}
+
+.collab-name {
+  font-weight: 750;
+  font-size: 0.88rem;
+  color: #09090b;
+}
+
+.badge-role {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.35rem;
+}
+
+.collab-email {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.collab-status {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.ptab-select-sm {
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #ffffff;
+}
+
+/* Settings List */
+.settings-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 14px;
+}
+
+.setting-title {
+  font-weight: 750;
+  font-size: 0.9rem;
+  color: #09090b;
+}
+
+.setting-desc {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.ptab-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #6366f1;
+  cursor: pointer;
+}
+
 
 
 

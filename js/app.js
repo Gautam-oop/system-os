@@ -17,6 +17,7 @@ import { renderAnalyticsCards } from './components/AnalyticsCards.js';
 import { renderMissionReport } from './components/MissionReport.js';
 import { renderModalHost } from './components/CommandPaletteModal.js';
 import { showOnboardingTutorial } from './components/OnboardingModal.js';
+import { showUserProfileModal } from './components/UserProfileModal.js';
 import {
   animatePageTransition,
   animateStaggeredEntrance,
@@ -173,6 +174,12 @@ function initApp() {
   // ─── Event Delegation for Navbar Clicks ──────────────────────────────
   if (navbarEl) {
     navbarEl.addEventListener('click', (e) => {
+      const profileBtn = e.target.closest('#navbar-profile-trigger');
+      if (profileBtn) {
+        showUserProfileModal('profile');
+        return;
+      }
+
       const tutorialBtn = e.target.closest('#tutorial-trigger');
       if (tutorialBtn) {
         showOnboardingTutorial(true);

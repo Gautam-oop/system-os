@@ -59,10 +59,10 @@ export function renderNavbar(containerEl) {
         <span style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: #6366f1; border-radius: 50%; box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);"></span>
       </button>
 
-      <!-- Profile Indicator -->
-      <div class="user-profile-chip" style="padding: 0.1rem; border-radius: 50%; border: none;">
-        <div class="avatar-img" style="width: 24px; height: 24px; font-size: 0.65rem; font-weight: 800;">EV</div>
-      </div>
+      <!-- Upgraded Profile Avatar Trigger (Opens Profile, Team Collaboration & Settings) -->
+      <button class="user-profile-chip" id="navbar-profile-trigger" title="User Profile, Team & Settings" style="padding: 2px; border-radius: 50%; border: 1.5px solid rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
+        <div class="avatar-img" style="width: 26px; height: 26px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">EV</div>
+      </button>
     </div>
   `;
 }
