@@ -16,14 +16,29 @@ export function renderMissionOverview(containerEl, forceRender = false) {
   const completedVal = mission.completedTasksCount || 428;
   const pendingVal = mission.pendingTasksCount || 14;
 
-  // Group tasks by project (Mocking assignment by index for now if objectiveId is missing)
+  // Group tasks by project
   const tasksByProject = {};
+  const displayObjectives = [...objectives];
+  let hasIndependentTasks = false;
+
   objectives.forEach(obj => tasksByProject[obj.id] = []);
-  tasks.forEach((task, index) => {
-    // If no explicit objectiveId, distribute them
-    const targetObj = task.objectiveId ? objectives.find(o => o.id === task.objectiveId) : objectives[index % objectives.length];
-    if (targetObj) {
-      tasksByProject[targetObj.id].push(task);
+  
+  tasks.forEach(task => {
+    if (task.objectiveId && tasksByProject[task.objectiveId]) {
+      tasksByProject[task.objectiveId].push(task);
+    } else {
+      if (!hasIndependentTasks) {
+        hasIndependentTasks = true;
+        tasksByProject['independent_tasks'] = [];
+        displayObjectives.push({
+          id: 'independent_tasks',
+          code: 'GEN-000',
+          name: 'General Backlog & Ad-Hoc Tasks',
+          status: 'IN_PROGRESS',
+          progressPercentage: 50
+        });
+      }
+      tasksByProject['independent_tasks'].push(task);
     }
   });
 
@@ -45,7 +60,7 @@ export function renderMissionOverview(containerEl, forceRender = false) {
     if (statPending) animateCounter(statPending, pendingVal, '', '');
 
     // Update Project Tiles in place
-    objectives.forEach(obj => {
+    displayObjectives.forEach(obj => {
       const tile = containerEl.querySelector(`[data-project-id="${obj.id}"]`);
       if (tile) {
         const fill = tile.querySelector('.progress-bar-fill');
@@ -151,7 +166,7 @@ export function renderMissionOverview(containerEl, forceRender = false) {
 
         <!-- Project Tiles Grid -->
         <div class="task-tiles-grid">
-          ${objectives.length > 0 ? objectives.map(obj => {
+          ${displayObjectives.length > 0 ? displayObjectives.map(obj => {
             const projectTasks = tasksByProject[obj.id] || [];
             
             return `
@@ -258,7 +273,7 @@ export function renderMissionOverview(containerEl, forceRender = false) {
     const heroFill = containerEl.querySelector('.hero-progress-fill');
     if (heroFill) animateProgressBar(heroFill, progressVal);
 
-    objectives.forEach(obj => {
+    displayObjectives.forEach(obj => {
       const tile = containerEl.querySelector(`[data-project-id="${obj.id}"]`);
       if (tile) {
         const fill = tile.querySelector('.progress-bar-fill');
@@ -269,4 +284,17 @@ export function renderMissionOverview(containerEl, forceRender = false) {
     const termBody = containerEl.querySelector('#os-terminal-body');
     if (termBody) termBody.scrollTop = termBody.scrollHeight;
   }, 50);
+
+  // Bind click events for full-screen task view
+  const tiles = containerEl.querySelectorAll('.task-tile-card');
+  tiles.forEach(tile => {
+    tile.style.cursor = 'pointer';
+    tile.title = 'Click to open full-screen Task Board';
+    tile.addEventListener('click', () => {
+      // Assuming store.switchTab or similar navigation exists in app.js
+      // We can dispatch a custom event or update active tab
+      const navBtn = document.querySelector('[data-tab="tasks"]');
+      if (navBtn) navBtn.click();
+    });
+  });
 }
