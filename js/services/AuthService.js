@@ -2,7 +2,7 @@
    MISSIONOS - FRONTEND AUTHENTICATION NETWORK SERVICE
    ========================================================================== */
 
-const API_AUTH_URL = 'http://localhost:8080/api/auth';
+const API_AUTH_URL = '/api/auth';
 
 class AuthService {
   /**
