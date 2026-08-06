@@ -24,8 +24,11 @@ export function renderAuth(containerEl, onLoginSuccess) {
     containerEl.innerHTML = `
       <div class="auth-showcase">
         <div class="auth-showcase-bg"></div>
-        <div class="auth-orb-1"></div>
-        <div class="auth-orb-2"></div>
+        <div class="auth-aurora-blob auth-aurora-1"></div>
+        <div class="auth-aurora-blob auth-aurora-2"></div>
+        <div class="auth-aurora-blob auth-aurora-3"></div>
+        <div class="auth-grid-overlay"></div>
+        <div class="auth-light-beam"></div>
         <div class="auth-showcase-content">
           <div class="auth-showcase-logo">
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

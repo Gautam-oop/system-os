@@ -67,7 +67,8 @@
   --text-inverse:  #ffffff;
 
   /* Typography */
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-display: 'Outfit', 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
   /* Layout */
@@ -151,23 +152,24 @@ body::after {
   background-size: 64px 64px;
 }
 
-/* ─── Typography — Bold, Sharp & High Contrast ────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
+/* ─── Typography — Impressive, Bold & High Contrast Display ─────────── */
+h1, h2, h3, h4, h5, h6, .card-title, .metric-value, .view-title, .page-title {
   color: var(--text);
+  font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   line-height: 1.15;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1 { font-size: 2.5rem; font-weight: 850; letter-spacing: -0.04em; }
-h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.035em; }
-h3 { font-size: 1.2rem; font-weight: 750; }
+h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.035em; }
+h3 { font-size: 1.25rem; font-weight: 750; }
 
 .font-mono { font-family: var(--font-mono); }
-.font-sharp-bold { font-weight: 800; color: #09090b; letter-spacing: -0.03em; }
-.font-heavy-title { font-weight: 900; color: #000000; letter-spacing: -0.04em; }
+.font-sharp-bold { font-family: var(--font-display); font-weight: 800; color: #09090b; letter-spacing: -0.03em; }
+.font-heavy-title { font-family: var(--font-display); font-weight: 900; color: #000000; letter-spacing: -0.04em; }
 .text-high-contrast { color: #18181b; font-weight: 600; }
 .text-sharp-secondary { color: #3f3f46; font-weight: 600; }
 
