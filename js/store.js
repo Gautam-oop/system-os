@@ -182,11 +182,30 @@ class MissionStore {
       { id: `${newId}-sub-3`, title: 'Automated Unit Tests & Security Audit', done: false, status: 'pending' }
     ];
 
+    // Intelligent AI Agent Routing Logic
+    let autoAgentId = 'agent-nexus';
+    let autoAgentName = 'Nexus';
+    const titleLower = (taskData.title || '').toLowerCase();
+
+    if (titleLower.match(/ui|ux|frontend|design|css|html|react|component|style|view|page|button/)) {
+      autoAgentId = 'agent-aura';
+      autoAgentName = 'Aura';
+    } else if (titleLower.match(/api|backend|database|sql|db|server|route|logic|microservice|data|auth/)) {
+      autoAgentId = 'agent-titan';
+      autoAgentName = 'Titan';
+    } else if (titleLower.match(/test|qa|security|audit|bug|fix|error|deploy|pipeline|ci\/cd|kubernetes/)) {
+      autoAgentId = 'agent-spectre';
+      autoAgentName = 'Spectre';
+    }
+
+    const finalAgentId = taskData.assignedAgentId === 'auto' ? autoAgentId : (taskData.assignedAgentId || autoAgentId);
+    const finalAgentName = taskData.assignedAgentId === 'auto' ? autoAgentName : (taskData.assignedAgentName || autoAgentName);
+
     const newTask = {
       id: newId,
       title: taskData.title || 'New Engineering Objective',
-      assignedAgentId: taskData.assignedAgentId || 'agent-aura',
-      assignedAgentName: taskData.assignedAgentName || 'Aura',
+      assignedAgentId: finalAgentId,
+      assignedAgentName: finalAgentName,
       priority: taskData.priority || 'high',
       objectiveId: taskData.objectiveId || null,
       status: 'ai_executing',

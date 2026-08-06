@@ -150,23 +150,14 @@ function renderNewTaskModal(containerEl) {
             <input type="text" id="task-title-input" required placeholder="e.g. Refactor API Route Handler" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.9rem;" />
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-            <div>
-              <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.35rem;">ASSIGN AI TEAMMATE</label>
-              <select id="task-agent-select" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.9rem;">
-                ${agents.map(a => `<option value="${a.id}|${a.name}">${a.name} (${(a.role || '').split(' ')[0]})</option>`).join('')}
-              </select>
-            </div>
-
-            <div>
-              <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.35rem;">PRIORITY</label>
-              <select id="task-priority-select" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.9rem;">
-                <option value="critical">CRITICAL</option>
-                <option value="high" selected>HIGH</option>
-                <option value="medium">MEDIUM</option>
-                <option value="low">LOW</option>
-              </select>
-            </div>
+          <div style="margin-top: 1rem;">
+            <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.35rem;">PRIORITY</label>
+            <select id="task-priority-select" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border-subtle); color: var(--text-main); font-size: 0.9rem;">
+              <option value="critical">CRITICAL</option>
+              <option value="high" selected>HIGH</option>
+              <option value="medium">MEDIUM</option>
+              <option value="low">LOW</option>
+            </select>
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
@@ -184,13 +175,11 @@ function renderNewTaskModal(containerEl) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const title = containerEl.querySelector('#task-title-input').value;
-    const [agentId, agentName] = containerEl.querySelector('#task-agent-select').value.split('|');
     const priority = containerEl.querySelector('#task-priority-select').value;
 
     store.addNewTask({
       title,
-      assignedAgentId: agentId,
-      assignedAgentName: agentName,
+      assignedAgentId: 'auto',
       priority,
       status: 'ai_executing'
     });
