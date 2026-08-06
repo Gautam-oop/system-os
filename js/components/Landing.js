@@ -682,7 +682,7 @@ function initLandingEngine(containerEl, onLaunchClick) {
       `;
 
       const consoleLines = [
-        { text: '[*] Seeding objectives matrix for Project Alpha (SaaS OS)...', type: 'info' },
+        { text: '[*] Seeding objectives matrix for SaaS OS...', type: 'info' },
         { text: '[+] PM: Assigned objective FE-101 (Frontend Design System) to Aura.AI.', type: 'info' },
         { text: '[+] PM: Assigned objective BE-202 (REST API Microservices) to Titan.AI.', type: 'info' },
         { text: '[~] Aura.AI: Generating theme tokens & CSS variables...', type: 'warn' },

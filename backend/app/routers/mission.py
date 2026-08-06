@@ -47,7 +47,7 @@ def get_mission_by_id(mission_id: str):
 @router.get("/mission", response_model=ApiResponse[MissionResponse])
 def get_default_mission():
     """
-    Retrieve current default active project/mission (Project Alpha).
+    Retrieve current default active project/mission (SaaS OS).
     """
     mission_dict = db_repo.get_mission("prj_9021_alpha")
     if not mission_dict:

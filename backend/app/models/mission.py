@@ -19,7 +19,7 @@ class MissionObjective(BaseModel):
         populate_by_name = True
 
 class CreateMissionRequest(BaseModel):
-    name: str = Field(..., example="Project Alpha (SaaS OS)")
+    name: str = Field(..., example="SaaS OS")
     description: str = Field(..., example="Next-gen AI workforce operating system")
     targetETA: str = Field(default="Aug 15, 2026")
     leadDirector: str = Field(default="Eleanor Vance")

@@ -22,8 +22,8 @@ DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 DB = {
     "mission": {
         "id": "prj_9021_alpha",
-        "codeName": "PROJECT ALPHA (SAAS OS)",
-        "name": "Project Alpha (SaaS OS)",
+        "codeName": "SAAS OS",
+        "name": "SaaS OS",
         "status": "Sprint 14 in Progress",
         "commanderId": "emp_001",
         "startedAt": "2026-08-01T06:00:00.000Z",
