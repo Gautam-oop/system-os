@@ -58,12 +58,12 @@ export function renderLanding(containerEl, onLaunchClick) {
         </h1>
         
         <p class="landing-subtitle">
-          missionOS automatically assembles an autonomous AI company that plans, researches, designs, builds, and tests complex software projects with zero human bottlenecks.
+          MissionOps automatically assembles an autonomous AI company that plans, researches, designs, builds, and tests complex software projects with zero human bottlenecks.
         </p>
 
         <div class="landing-cta-group">
           <button class="btn-primary-auth" id="hero-launch-btn">
-            Launch missionOS
+            Launch MissionOps
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
@@ -682,7 +682,7 @@ function initLandingEngine(containerEl, onLaunchClick) {
       `;
 
       const consoleLines = [
-        { text: '[*] Seeding objectives matrix for SaaS OS...', type: 'info' },
+        { text: '[*] Seeding objectives matrix for Project Alpha (SaaS OS)...', type: 'info' },
         { text: '[+] PM: Assigned objective FE-101 (Frontend Design System) to Aura.AI.', type: 'info' },
         { text: '[+] PM: Assigned objective BE-202 (REST API Microservices) to Titan.AI.', type: 'info' },
         { text: '[~] Aura.AI: Generating theme tokens & CSS variables...', type: 'warn' },

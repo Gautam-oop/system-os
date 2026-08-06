@@ -115,7 +115,6 @@ function initApp() {
   store.subscribe('tasksUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'tasks' && views.tasks) renderTaskBoard(views.tasks);
-    if (tab === 'overview' && views.overview) renderMissionOverview(views.overview);
   });
 
   store.subscribe('timelineUpdated', () => {
@@ -306,7 +305,7 @@ function initApp() {
 
   // Verify auth session on load
   console.log('[missionOS] Booting auth module...');
-  showLandingScreen(); // Show landing screen immediately by default
+  showLandingScreen();
   authContext.checkAuth().then(authenticated => {
     if (authenticated) {
       showDashboard();

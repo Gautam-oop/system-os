@@ -23,7 +23,7 @@ export function showMissionCompleteOverlay() {
         </svg>
       </div>
       <h1 class="mission-complete-title">Mission Completed</h1>
-      <p class="mission-complete-name">${mission.name || 'SaaS OS'}</p>
+      <p class="mission-complete-name">${mission.name || 'Project Alpha (SaaS OS)'}</p>
       <p class="mission-complete-desc">All AI teammates have completed their assignments.<br>Every task has been verified and delivered.</p>
       <div class="mission-complete-actions">
         <button class="btn btn-primary mission-complete-btn" id="mc-view-report-btn">

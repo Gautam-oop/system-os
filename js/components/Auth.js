@@ -162,7 +162,7 @@ function getViewHtml() {
     footerHtml = `Don't have an account? <a href="#" id="view-signup-trigger">Sign up</a>`;
   } else if (activeView === 'signup') {
     headerTitle = 'Create your account';
-    headerSub = 'Get started with missionOS and automate your developer cycles.';
+    headerSub = 'Get started with MissionOps and automate your developer cycles.';
     submitText = 'Create Account';
     formFields = `
       <div class="auth-input-group">

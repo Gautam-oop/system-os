@@ -12,42 +12,65 @@ export class SimulationService {
     this.isRunning = false;
     this.stepCount = 0;
 
-    // Realistic log dictionaries by phase
-    this.phaseLogs = {
-      0: [ // Context & Planning
-        "Parsing objective requirements and reading documentation...",
-        "Analyzing repository file structures...",
-        "Generating architectural implementation plan..."
+    // Defined employee simulation scripts
+    this.agentFlows = {
+      "agent-research": [
+        { status: "Working", task: "Researching competitors & LLM benchmarks...", toast: "Research Analyst Started Market Benchmarking", log: "Research Analyst started competitor benchmark analysis" },
+        { status: "Reviewing", task: "Drafting technical spec & LLM strategy...", toast: null, log: "Research Analyst drafting technical specification" },
+        { status: "Completed", task: "Completed competitor analysis report.", toast: "Research Completed", log: "Research Analyst completed competitor analysis" },
+        { status: "Waiting", task: "Waiting for Project Manager review.", toast: null, log: "Research Analyst waiting for PM review" }
       ],
-      1: [ // Implementation
-        "Writing code components...",
-        "Updating CSS modules and theme tokens...",
-        "Refactoring backend database queries...",
-        "Integrating API service endpoints..."
+      "agent-design": [
+        { status: "Planning", task: "Defining component design tokens...", toast: null, log: "UI/UX Designer defining design system tokens" },
+        { status: "Working", task: "Creating wireframes & layout grid...", toast: "Designer Started Wireframing", log: "UI/UX Designer creating layout grid wireframes" },
+        { status: "Reviewing", task: "Reviewing Figma design specs...", toast: null, log: "UI/UX Designer reviewing design specs" },
+        { status: "Completed", task: "Completed UI design system.", toast: "UI Design Specs Finalized", log: "UI/UX Designer finalized design system" }
       ],
-      2: [ // Localhost Dev & Testing
-        "Spinning up local development server on http://localhost:3000...",
-        "Running hot-module replacement (HMR)...",
-        "Executing Jest unit test suites...",
-        "Running Cypress E2E regression tests...",
-        "Local tests passed cleanly. 0 vulnerabilities found."
+      "agent-backend": [
+        { status: "Waiting", task: "Awaiting API specifications...", toast: "Backend Waiting For Review", log: "Backend Engineer awaiting API specs" },
+        { status: "Working", task: "Building authentication API & JWT keys...", toast: "Backend Started", log: "Backend Engineer building OAuth2 & JWT Auth API" },
+        { status: "Reviewing", task: "Optimizing PostgreSQL connection pool...", toast: null, log: "Backend Engineer optimizing database pool" },
+        { status: "Completed", task: "Completed authentication API.", toast: "Backend Auth API Completed", log: "Backend Engineer completed Authentication API" }
       ],
-      3: [ // QA Verification
-        "Submitting PR for Manager AI review...",
-        "Performing zero-trust security audit...",
-        "Checking ARIA accessibility compliance...",
-        "Code review approved. Merging to main branch."
+      "agent-qa": [
+        { status: "Idle", task: "Standing by for backend build...", toast: "QA Waiting", log: "QA Engineer standing by for build" },
+        { status: "Working", task: "Started testing login flow & Cypress suite...", toast: "QA Started Testing", log: "QA Engineer executing Cypress integration tests" },
+        { status: "Reviewing", task: "Evaluating test coverage report...", toast: null, log: "QA Engineer reviewing 100% test coverage report" },
+        { status: "Completed", task: "Completed regression test suite.", toast: "QA Testing Passed Cleanly", log: "QA Engineer verified 42/42 tests passed clean" }
       ],
-      4: [ // Production Deployment
-        "Building production frontend bundle...",
-        "Optimizing static assets and images...",
-        "Deploying to Vercel edge network...",
-        "Canary deployment successful. 100% traffic routed."
+      "agent-pm": [
+        { status: "Planning", task: "Structuring Sprint 14 roadmap...", toast: "PM Structuring Sprint Roadmap", log: "Project Manager initiated Sprint 14 roadmap" },
+        { status: "Working", task: "Assigning backend & QA directives...", toast: "PM Assigned Engineering Directives", log: "Project Manager assigned backend & QA directives" },
+        { status: "Reviewing", task: "Reviewing milestone progress...", toast: null, log: "Project Manager reviewing Sprint 14 milestones" },
+        { status: "Completed", task: "Sprint 14 Mission Completed!", toast: "Mission Completed!", log: "Project Manager marked Sprint 14 Mission as COMPLETED!" }
       ]
     };
+
+    // Agent flow index trackers
+    this.agentIndices = {
+      "agent-research": 0,
+      "agent-design": 0,
+      "agent-backend": 0,
+      "agent-qa": 0,
+      "agent-pm": 0
+    };
+
+    // Kanban task movement stages
+    this.kanbanMoves = [
+      { taskId: "TSK-108", status: "in_progress" },
+      { taskId: "TSK-108", status: "ai_executing" },
+      { taskId: "TSK-101", status: "in_progress" },
+      { taskId: "TSK-101", status: "completed" },
+      { taskId: "TSK-103", status: "in_progress" },
+      { taskId: "TSK-103", status: "ai_executing" },
+      { taskId: "TSK-103", status: "completed" },
+      { taskId: "TSK-107", status: "in_progress" },
+      { taskId: "TSK-107", status: "completed" }
+    ];
+    this.kanbanMoveIndex = 0;
   }
 
-  startSimulation(intervalMs = 1500) {
+  startSimulation(intervalMs = 2500) {
     if (this.isRunning) return;
     this.isRunning = true;
 
@@ -76,104 +99,115 @@ export class SimulationService {
 
   tick() {
     this.stepCount += 1;
-    let anyTaskActive = false;
 
-    // 1. Data-Driven Task Progression
+    // 1. Pick an AI employee to update status & task
+    const agentIds = Object.keys(this.agentFlows);
+    const selectedAgentId = agentIds[this.stepCount % agentIds.length];
+    const agentFlow = this.agentFlows[selectedAgentId];
+    const currentIndex = this.agentIndices[selectedAgentId];
+    const stepData = agentFlow[currentIndex];
+
+    // Update agent status & current task
+    const agent = agentService.getAgentById(selectedAgentId);
+    if (agent && stepData) {
+      agentService.transitionAgentStatus(selectedAgentId, stepData.status, stepData.task);
+      agentService.updateAgentProgress(selectedAgentId, Math.floor(Math.random() * 18 + 8));
+
+      // Advance flow index
+      this.agentIndices[selectedAgentId] = (currentIndex + 1) % agentFlow.length;
+
+      // Toast notification if specified
+      if (stepData.toast) {
+        this.store.notify("toast", {
+          type: stepData.status === "Completed" ? "success" : "info",
+          text: stepData.toast
+        });
+      }
+
+      // Log entry
+      if (stepData.log) {
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        this.store.addActivityLog({
+          timestamp: timeStr,
+          agentName: agent.name,
+          agentId: agent.id,
+          severity: stepData.status === "Completed" ? "SUCCESS" : stepData.status === "Reviewing" ? "WARN" : "INFO",
+          message: stepData.log,
+          category: agent.role.split(' ')[0].toUpperCase()
+        });
+      }
+    }
+
+    // Increment progress for all active working agents
+    agentService.getAgents().forEach(a => {
+      if (a.status === "Working" || a.status === "Planning") {
+        agentService.updateAgentProgress(a.id, Math.floor(Math.random() * 8 + 4));
+      }
+    });
+
+    // Notify agents update
+    this.store.state.agents = [...agentService.getAgents()];
+    this.store.notify("agentsUpdated", this.store.state.agents);
+
+    // 2. Automatically Move & Advance Task Sub-task Steps every tick
     (this.store.state.tasks || []).forEach(task => {
-      if (task.status === 'ai_executing') {
-        anyTaskActive = true;
-        
-        // Slower progression: +1 to 3 percent per tick (makes it take longer)
-        task.progress = Math.min(100, (task.progress || 0) + Math.floor(Math.random() * 3 + 1));
-        
-        // Determine phase based on progress (5 phases, 20% each)
-        const phaseIndex = Math.min(4, Math.floor(task.progress / 20));
-        
-        // Update subtasks
-        if (task.subtasks && task.subtasks.length === 5) {
-          for (let i = 0; i < 5; i++) {
-            if (i < phaseIndex) {
-              task.subtasks[i].done = true;
-              task.subtasks[i].status = 'completed';
-            } else if (i === phaseIndex) {
-              task.subtasks[i].done = false;
-              task.subtasks[i].status = 'executing';
-            } else {
-              task.subtasks[i].done = false;
-              task.subtasks[i].status = 'pending';
-            }
+      if (task.status === 'ai_executing' || task.status === 'in_progress') {
+        task.progress = Math.min(95, (task.progress || 20) + Math.floor(Math.random() * 6 + 3));
+        if (task.subtasks && task.subtasks.length > 0) {
+          if (task.progress > 40 && task.subtasks[0]) {
+            task.subtasks[0].done = true;
+            task.subtasks[0].status = 'completed';
+            if (task.subtasks[1] && task.subtasks[1].status !== 'completed') task.subtasks[1].status = 'executing';
           }
-        }
-
-        // Emit logs randomly for the current phase
-        if (Math.random() > 0.3) {
-          const possibleLogs = this.phaseLogs[phaseIndex];
-          const logMsg = possibleLogs[Math.floor(Math.random() * possibleLogs.length)];
-          
-          const now = new Date();
-          const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-          
-          this.store.addActivityLog({
-            timestamp: timeStr,
-            agentName: task.assignedAgentName,
-            agentId: task.assignedAgentId,
-            severity: phaseIndex === 4 ? "SUCCESS" : "INFO",
-            message: `[${task.id}] ${logMsg}`,
-            category: 'BUILD'
-          });
-        }
-
-        // Complete the task if at 100%
-        if (task.progress >= 100) {
-          task.status = 'completed';
-          if (task.subtasks) {
-            task.subtasks.forEach(s => { s.done = true; s.status = 'completed'; });
+          if (task.progress > 75 && task.subtasks[1]) {
+            task.subtasks[1].done = true;
+            task.subtasks[1].status = 'completed';
+            if (task.subtasks[2] && task.subtasks[2].status !== 'completed') task.subtasks[2].status = 'executing';
           }
-          
-          this.store.notify("toast", {
-            type: "success",
-            text: `Mission [${task.id}] successfully deployed to Production!`
-          });
-
-          // Mark agent as idle
-          const agent = agentService.getAgentById(task.assignedAgentId);
-          if (agent) {
-            agent.status = 'Idle';
-            agent.currentTask = 'Awaiting assignment...';
-            agent.progress = 0;
+          if (task.progress >= 95 && task.subtasks[2]) {
+            task.subtasks[2].done = true;
+            task.subtasks[2].status = 'completed';
+            task.status = 'completed';
           }
         }
       }
     });
 
+    if (this.kanbanMoves.length > 0) {
+      const move = this.kanbanMoves[this.kanbanMoveIndex];
+      const task = (this.store.state.tasks || []).find(t => t.id === move.taskId);
+      if (task) {
+        task.status = move.status;
+      }
+      this.kanbanMoveIndex = (this.kanbanMoveIndex + 1) % this.kanbanMoves.length;
+    }
     this.store.notify("tasksUpdated", this.store.state.tasks);
-    
-    // Notify agents update
-    this.store.state.agents = [...agentService.getAgents()];
-    this.store.notify("agentsUpdated", this.store.state.agents);
 
-    // 2. Gradually Increase Mission Progress only if tasks are active
+    // 3. Gradually Increase Mission Progress (68% -> 70% -> 73% -> ... -> 100%)
     if (this.store.state.mission) {
-      const currentProg = this.store.state.mission.overallProgress || 0;
-      
-      // Calculate overall progress based on tasks
-      const allTasks = this.store.state.tasks || [];
-      if (allTasks.length > 0) {
-        const totalProgress = allTasks.reduce((sum, t) => sum + (t.progress || 0), 0);
-        this.store.state.mission.overallProgress = Math.floor(totalProgress / allTasks.length);
-      } else {
-        this.store.state.mission.overallProgress = 0;
+      const currentProg = this.store.state.mission.overallProgress || 68;
+      if (currentProg < 100) {
+        const nextProg = Math.min(100, currentProg + Math.floor(Math.random() * 3 + 1));
+        this.store.state.mission.overallProgress = nextProg;
       }
 
       // Calculate completed & pending counts
-      const completedCount = allTasks.filter(t => t.status === "completed").length;
-      const pendingCount = allTasks.filter(t => t.status !== "completed").length;
+      const completedCount = (this.store.state.tasks || []).filter(t => t.status === "completed").length;
+      const pendingCount = Math.max(0, 14 - completedCount);
 
-      this.store.state.mission.completedTasksCount = completedCount;
+      this.store.state.mission.completedTasksCount = 428 + completedCount * 4;
       this.store.state.mission.pendingTasksCount = pendingCount;
 
       this.store.notify("missionUpdated", this.store.state.mission);
+
+      // 4. MISSION COMPLETION: When progress reaches 100%, finalize everything
+      if (this.store.state.mission.overallProgress >= 100 && !this.completed) {
+        this.completed = true;
+        this.completeMission();
+      }
     }
+  }
 
   completeMission() {
     console.log('[missionOS] Mission reached 100%. Finalizing...');
