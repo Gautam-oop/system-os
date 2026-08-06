@@ -21,7 +21,7 @@ export class AgentService {
         activityLog: ["Created Mission Plan", "Assigned Sprint 14 Directives"]
       },
       {
-        id: "agent-research",
+        id: "agent-nexus",
         code: "RA-02",
         name: "Nexus",
         role: "Research Analyst",
@@ -36,7 +36,7 @@ export class AgentService {
         activityLog: ["Ingested market dataset", "Drafted technical specification"]
       },
       {
-        id: "agent-design",
+        id: "agent-aura",
         code: "DES-03",
         name: "Aura",
         role: "UI/UX Designer",
@@ -51,7 +51,7 @@ export class AgentService {
         activityLog: ["Defined color tokens", "Designing responsive layout grid"]
       },
       {
-        id: "agent-backend",
+        id: "agent-titan",
         code: "BE-04",
         name: "Titan",
         role: "Backend Engineer",
@@ -66,7 +66,7 @@ export class AgentService {
         activityLog: ["PostgreSQL pool configured", "Awaiting API spec review"]
       },
       {
-        id: "agent-qa",
+        id: "agent-spectre",
         code: "QA-05",
         name: "Spectre",
         role: "QA Engineer",
