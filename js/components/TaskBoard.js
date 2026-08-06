@@ -163,6 +163,28 @@ function renderTaskCard(task) {
       </div>
 
       <div class="task-title">${task.title}</div>
+      ${
+  task.assignedAgents?.length
+    ? `
+    <div style="margin-top:10px;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">
+        Assigned Agents
+      </div>
+
+      ${task.assignedAgents
+        .map(
+          (agent) => `
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+              <span>🤖 ${agent.name}</span>
+              <span>${agent.task}</span>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `
+    : ""
+}
 
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.75rem;">
       ${
