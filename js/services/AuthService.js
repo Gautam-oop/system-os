@@ -71,6 +71,21 @@ class AuthService {
     }
     return json.data;
   }
+    try {
+      const res = await fetch(`${API_AUTH_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(this.parseError(json, 'Login failed'));
+      }
+      return json.data;
+    } catch (err) {
+  console.error('[missionOS] Login failed:', err);
+  throw err;
+}
 
 
   /**

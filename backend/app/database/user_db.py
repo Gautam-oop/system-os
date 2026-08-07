@@ -5,6 +5,9 @@ MISSIONOS FASTAPI BACKEND - USER DATABASE
 """
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import create_engine, Column, String, DateTime
@@ -17,11 +20,9 @@ if os.environ.get("VERCEL"):
     DATABASE_URL = "sqlite:////tmp/mission_ops_users.db"
 else:
     DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'mission_ops_users.db')}"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(
-    DATABASE_URL, 
-    connect_args={"check_same_thread": False} # Required for SQLite in multi-threaded FastAPI
-)
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -52,7 +53,7 @@ def init_db():
             from backend.app.utils.password import hash_password
             
             new_admin = User(
-                id=f"usr_{uuid.uuid4().hex[:12]}",
+                id=str(uuid.uuid4()),
                 name="Eleanor Vance",
                 email=admin_email,
                 hashed_password=hash_password("password123"),
