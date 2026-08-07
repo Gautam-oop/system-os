@@ -71,7 +71,8 @@ class MissionOrchestrator:
             self.memory.appendEvent({
                 "event_type": f"{agent.role.upper().replace(' ', '_')}_FINISHED",
                 "message": f"{agent.role} Finished",
-                "llm_trace": llm_response
+                "llm_trace": llm_response,
+                "payload": agent_result
             })
             
         # 3. CEO Final Summary
@@ -86,7 +87,8 @@ class MissionOrchestrator:
         
         self.memory.appendEvent({
             "event_type": "CEO_FINAL_FINISHED",
-            "message": "CEO Final Summary Finished"
+            "message": "CEO Final Summary Finished",
+            "payload": final_summary
         })
         
         # 4. Mission Completed

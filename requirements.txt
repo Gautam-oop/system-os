@@ -7,5 +7,4 @@ passlib[bcrypt]
 python-dotenv
 openai
 SQLAlchemy
-psycopg2-binary
 email-validator

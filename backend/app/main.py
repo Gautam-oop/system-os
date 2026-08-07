@@ -22,8 +22,7 @@ app = FastAPI(
     version=settings.VERSION,
     description="Clean Architecture FastAPI Backend for missionOS AI Workforce Operating System",
     docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    redoc_url="/redoc"
 )
 
 # Configure CORS Middleware
@@ -41,17 +40,6 @@ app.include_router(mission.router)
 app.include_router(task.router)
 app.include_router(workforce.router)
 app.include_router(extra.router)
-
-@app.get("/api/openapi.json", include_in_schema=False)
-@app.get("/openapi.json", include_in_schema=False)
-def get_openapi_schema():
-    return app.openapi()
-
-@app.get("/api/docs", include_in_schema=False)
-@app.get("/docs", include_in_schema=False)
-def get_swagger_docs():
-    from fastapi.openapi.docs import get_swagger_ui_html
-    return get_swagger_ui_html(openapi_url="/api/openapi.json", title=f"{settings.PROJECT_NAME} - API Docs")
 
 # Mount Static Web App Frontend
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
