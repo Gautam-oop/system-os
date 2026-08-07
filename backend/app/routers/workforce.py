@@ -57,3 +57,43 @@ def update_teammate_status(teammate_id: str, payload: Optional[UpdateTeammateSta
         message=f"Teammate {teammate_id} status updated",
         data=TeammateResponse(**updated)
     )
+from datetime import datetime, timezone
+import uuid
+from pydantic import BaseModel
+from backend.app.database.agent_message_db import AgentMessage
+from backend.app.database.user_db import SessionLocal
+
+
+class AgentMessageCreate(BaseModel):
+    sender_agent_id: str | None = None
+    sender_name: str
+    role: str
+    content: str
+    mission_id: str | None = None
+
+
+@router.post("/agent-messages")
+def save_agent_message(payload: AgentMessageCreate):
+    db = SessionLocal()
+
+    try:
+        message = AgentMessage(
+            id=str(uuid.uuid4()),
+            sender_agent_id=payload.sender_agent_id,
+            sender_name=payload.sender_name,
+            role=payload.role,
+            content=payload.content,
+            mission_id=payload.mission_id,
+            created_at=datetime.now(timezone.utc),
+        )
+
+        db.add(message)
+        db.commit()
+
+        return {
+            "status": "success",
+            "code": 201,
+            "data": {"id": message.id},
+        }
+    finally:
+        db.close()

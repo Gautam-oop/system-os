@@ -321,6 +321,23 @@ const AGENT_ROLE_MAP = {
 const PHASE_ORDER = ['planning', 'scaffolding', 'development', 'testing', 'deployment'];
 
 export class SimulationService {
+  async persistWarRoomMessage(message) {
+  try {
+    await fetch('/api/agent-messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender_name: message.agentName,
+        role: message.role,
+        content: message.content
+      })
+    });
+  } catch (err) {
+    console.warn('[missionOS] Failed to persist agent message:', err.message);
+  }
+}
   constructor(store) {
     this.store = store;
     this.timer = null;
@@ -427,12 +444,18 @@ export class SimulationService {
       if (this.chatDelayCounter <= 0) {
         const nextMsg = this.chatQueue.shift();
         this.store.setTypingAgent(null);
-        this.store.addWarRoomMessage({
-          role: nextMsg.role,
-          agentName: nextMsg.name,
-          content: nextMsg.content,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
+        const warRoomMessage = {
+  role: nextMsg.role,
+  agentName: nextMsg.name,
+  content: nextMsg.content,
+  timestamp: new Date().toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+};
+
+this.store.addWarRoomMessage(warRoomMessage);
+this.persistWarRoomMessage(warRoomMessage);
         
         // Random delay before next message (0 to 1 ticks for fast pacing)
         if (this.chatQueue.length > 0) {
