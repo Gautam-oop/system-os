@@ -20,8 +20,6 @@ export function renderModalHost(containerEl) {
     renderNewTaskModal(containerEl);
   } else if (activeModal === 'task-detail') {
     renderTaskDetailModal(containerEl);
-  } else if (activeModal === 'activity-feed') {
-    renderActivityFeedModal(containerEl);
   }
 }
 
