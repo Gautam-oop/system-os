@@ -11,6 +11,10 @@ export function renderNavbar(containerEl) {
   const activeCount = agents.filter(a => a.status !== 'Idle').length;
   const unreadLogsCount = Math.min(9, state.activityLogs ? state.activityLogs.slice(0, 3).length : 3);
 
+  // Preserve popover state before blowing away innerHTML
+  const existingPopover = document.getElementById('notif-popover');
+  const isPopoverOpen = existingPopover && existingPopover.style.display === 'block';
+
   containerEl.className = 'navbar-container';
   containerEl.innerHTML = `
     <div class="navbar-left">
@@ -79,6 +83,13 @@ export function renderNavbar(containerEl) {
       </button>
     </div>
   `;
+
+  // Restore popover state
+  if (isPopoverOpen) {
+    const newPopover = document.getElementById('notif-popover');
+    if (newPopover) newPopover.style.display = 'block';
+    updateNotificationPopover();
+  }
 }
 
 
