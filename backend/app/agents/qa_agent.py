@@ -8,45 +8,73 @@ class QAAgent(BaseAgent):
         super().__init__(name="QA Spectre", role="QA Engineer")
         self.provider = NVIDIAProvider()
 
-    def execute(self, mission: str, shared_memory: Dict[str, Any]) -> Dict[str, Any]:
-        print(f"[{self.role}] Ensuring quality and testing the deliverables.")
-        
-        prompt = f"""
-        Review the proposed backend architecture and API endpoints for mission: '{mission}' from the shared memory.
-        Develop a comprehensive testing strategy, including unit tests, integration tests, edge cases, performance checks, security checks, and a coverage estimate.
+    def execute(self, mission: str, shared_memory: Dict[str, Any], target_file: str = None) -> Dict[str, Any]:
+        if target_file:
+            print(f"[{self.role}] Generating specific test file: {target_file}")
+            prompt = f"""
+            Based on the mission: '{mission}' and the blueprint, generate ONLY the test source code for the file '{target_file}'.
+            Return ONLY a raw JSON object with this exact structure:
+            {{
+                "status": "success",
+                "telemetry": {{
+                    "agent_name": "{self.name}",
+                    "current_task": "Generating test {target_file}",
+                    "reasoning_summary": "I am writing Pytest assertions...",
+                    "dependencies_needed": ["none"],
+                    "confidence": 92,
+                    "estimated_completion": "4s"
+                }},
+                "files": {{
+                    "{target_file}": "import pytest..."
+                }}
+            }}
+            Do not include markdown blocks or any other text.
+            """
+        else:
+            print(f"[{self.role}] Ensuring quality and testing the deliverables.")
+            prompt = f"""
+            Review the proposed blueprint for mission: '{mission}'.
+            Develop a comprehensive testing suite using Pytest for the backend endpoints.
 
-        Return ONLY a raw JSON object with this exact structure:
-        {{
-            "status": "success",
-            "test_strategy": "A brief description of the overall testing approach.",
-            "unit_tests": ["Test 1", "Test 2"],
-            "integration_tests": ["Integration Test 1", "Integration Test 2"],
-            "edge_cases": ["Edge case 1", "Edge case 2"],
-            "performance_checks": ["Check 1", "Check 2"],
-            "security_checks": ["Security check 1", "Security check 2"],
-            "coverage_estimate": "e.g., 90%"
-        }}
-        Do not include markdown blocks or any other text.
-        """
+            Return ONLY a raw JSON object with this exact structure:
+            {{
+                "status": "success",
+                "telemetry": {{
+                    "agent_name": "{self.name}",
+                    "current_task": "Developing test suite",
+                    "reasoning_summary": "I am ensuring high test coverage for all routes.",
+                    "dependencies_needed": ["Backend implementation"],
+                    "confidence": 90,
+                    "estimated_completion": "10s"
+                }},
+                "files": {{
+                    "backend/tests/test_main.py": "import pytest..."
+                }}
+            }}
+            Do not include markdown blocks or any other text.
+            """
         
         fallback = {
             "status": "fallback",
-            "test_strategy": "Standard E2E and Unit testing.",
-            "unit_tests": ["Login test"],
-            "integration_tests": ["DB connection test"],
-            "edge_cases": ["Invalid input"],
-            "performance_checks": ["Load time under 2s"],
-            "security_checks": ["SQL injection check"],
-            "coverage_estimate": "80%"
+            "telemetry": {
+                "agent_name": self.name,
+                "current_task": "Fallback task",
+                "reasoning_summary": "Fell back due to validation errors.",
+                "dependencies_needed": [],
+                "confidence": 0,
+                "estimated_completion": "0s"
+            },
+            "files": {
+                target_file if target_file else "backend/tests/test_fallback.py": "def test_ok(): pass"
+            }
         }
         
         response = self.generate_with_retry(
             provider=self.provider,
             prompt=prompt,
             context=shared_memory,
-            required_keys=["status", "test_strategy", "unit_tests", "integration_tests", "edge_cases", "performance_checks", "security_checks", "coverage_estimate"],
+            required_keys=["status", "telemetry", "files"],
             fallback_response=fallback
         )
         
-        shared_memory["qa_output"] = response
         return response

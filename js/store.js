@@ -32,11 +32,27 @@ class MissionStore {
       timelinePhases: [],
       activityLogs: [],
       warRoomMessages: [],
+      collaborationFeed: [],
+      gitCommits: [],
       decisions: [],
       pendingApproval: null,
       typingAgent: null,
       analytics: null,
-      heroStats: []
+      heroStats: [],
+      missionIntelligence: {
+        currentEngineer: null,
+        currentFile: null,
+        currentTask: null,
+        remainingArtifacts: 0,
+        buildProgress: 0,
+        validationStatus: "Pending",
+        activeRepair: null,
+        eta: "Calculating...",
+        confidenceScore: 99
+      },
+      projectExplorer: {
+        files: []
+      }
     };
 
     this.loading = {

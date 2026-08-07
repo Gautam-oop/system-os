@@ -12,6 +12,12 @@ from backend.app.agents.backend_engineer_agent import BackendEngineerAgent
 from backend.app.agents.qa_agent import QAAgent
 from backend.app.llm.router import get_llm_router
 
+import shutil
+from backend.app.agents.db_agent import DBAgent
+from backend.app.agents.frontend_agent import FrontendEngineerAgent
+
+from backend.app.agents.architect_agent import ArchitectAgent
+
 class MissionOrchestrator:
     """
     Controls the execution sequence of the autonomous AI workforce.
@@ -25,18 +31,21 @@ class MissionOrchestrator:
             CEOAgent(),
             ProjectManagerAgent(),
             ResearchAgent(),
+            ArchitectAgent(),
             BackendEngineerAgent(),
+            DBAgent(),
+            FrontendEngineerAgent(),
             QAAgent()
         ]
 
     def start_mission(self, mission_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Start the autonomous workforce mission sequence.
-        Workflow: Mission Created -> CEO -> Project Manager -> Research -> Backend -> QA -> CEO Final Summary
         """
         # 1. Mission Created
         self.memory.createMission(mission_data)
         mission_title = mission_data.get("title", mission_data.get("name", "Unknown Mission"))
+        mission_id = mission_data.get("id", f"mission_{hash(mission_title)}")
         
         self.memory.appendEvent({
             "event_type": "MISSION_STARTED",
@@ -46,28 +55,46 @@ class MissionOrchestrator:
         # Shared state dictionary passed across agents
         shared_state: Dict[str, Any] = {}
         
-        # 2. Sequential Execution Pipeline
-        for agent in self.agents:
-            # Generate execution event BEFORE the step
+        # 2. Planning Pipeline
+        planning_agents = [self.agents[0], self.agents[1], self.agents[2], self.agents[3]] # CEO, PM, Research, Architect
+        
+        for agent in planning_agents:
             self.memory.appendEvent({
                 "event_type": f"{agent.role.upper().replace(' ', '_')}_STARTED",
                 "message": f"{agent.role} Started"
             })
             
-            # Ask LLM Router for contextual generation (Mocked for now)
             llm_response = self.llm_router.generate(
                 role=agent.role, 
-                prompt=f"Execute step for mission: {mission_title}", 
+                prompt=f"Explain your approach for '{mission_title}'. Return ONLY JSON with keys: 'what_doing', 'why_decision', 'needs_from_others'.", 
                 context=shared_state
             )
             
-            # Execute agent logic (which updates shared_state in-place)
-            agent_result = agent.execute(mission_title, shared_state)
+            # Emit AGENT_THINKING for planning agents based on llm_trace
+            try:
+                clean_str = llm_response.strip()
+                if clean_str.startswith("```json"): clean_str = clean_str[7:]
+                if clean_str.startswith("```"): clean_str = clean_str[3:]
+                if clean_str.endswith("```"): clean_str = clean_str[:-3]
+                trace_json = json.loads(clean_str.strip())
+                self.memory.appendEvent({
+                    "event_type": "AGENT_THINKING",
+                    "message": f"{agent.role} generated telemetry",
+                    "payload": {
+                        "agent_name": agent.name,
+                        "current_task": trace_json.get("what_doing", ""),
+                        "reasoning_summary": trace_json.get("why_decision", ""),
+                        "dependencies_needed": [trace_json.get("needs_from_others", "none")],
+                        "confidence": 95,
+                        "estimated_completion": "N/A"
+                    }
+                })
+            except Exception:
+                pass
             
-            # Save the result explicitly to memory's agent_outputs store
+            agent_result = agent.execute(mission_title, shared_state)
             self.memory.saveAgentOutput(agent.role, agent_result)
             
-            # Generate execution event AFTER the step
             self.memory.appendEvent({
                 "event_type": f"{agent.role.upper().replace(' ', '_')}_FINISHED",
                 "message": f"{agent.role} Finished",
@@ -75,14 +102,26 @@ class MissionOrchestrator:
                 "payload": agent_result
             })
             
-        # 3. CEO Final Summary
+        # 3. Iterative Execution Manager
+        from backend.app.orchestrator.execution_manager import ExecutionManager
+        execution_agents = [self.agents[4], self.agents[5], self.agents[6], self.agents[7]] # Backend, DB, Frontend, QA
+        
+        exec_manager = ExecutionManager(self.memory, execution_agents)
+        download_url = exec_manager.execute(mission_title, mission_id, shared_state)
+        
+        # 3.5 Autonomous Build Execution
+        from backend.app.orchestrator.build_manager import BuildManager
+        build_manager = BuildManager(self.memory, execution_agents)
+        build_manager.execute(mission_title, mission_id, shared_state)
+        
+        # 4. CEO Final Summary
         self.memory.appendEvent({
             "event_type": "CEO_FINAL_STARTED",
             "message": "CEO Final Summary Started"
         })
         
         ceo = self.agents[0]
-        final_summary = ceo.execute(f"Finalize {mission_title}", shared_state)
+        final_summary = ceo.execute(f"Finalize {mission_title} and review generated workspace at {download_url}", shared_state)
         self.memory.saveAgentOutput("CEO_Final", final_summary)
         
         self.memory.appendEvent({
@@ -91,8 +130,9 @@ class MissionOrchestrator:
             "payload": final_summary
         })
         
-        # 4. Mission Completed
-        self.memory.updateMission({"status": "completed"})
+        # 5. Mission Completed
+        mission_update = {"status": "completed", "download_url": download_url}
+        self.memory.updateMission(mission_update)
         self.memory.appendEvent({
             "event_type": "MISSION_COMPLETED",
             "message": "Mission Completed"

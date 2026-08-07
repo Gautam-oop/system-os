@@ -93,3 +93,17 @@ def run_mission(payload: CreateMissionRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Mission execution failed: {str(e)}")
+
+@router.get("/download/{mission_id}")
+def download_workspace(mission_id: str):
+    """
+    Download the generated source code workspace for a mission.
+    """
+    import os
+    from fastapi.responses import FileResponse
+    
+    zip_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f"../../../backend/workspace/{mission_id}.zip"))
+    if not os.path.exists(zip_path):
+        raise HTTPException(status_code=404, detail="Workspace archive not found or still generating.")
+        
+    return FileResponse(zip_path, media_type="application/zip", filename=f"{mission_id}.zip")

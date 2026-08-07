@@ -107,6 +107,40 @@ export function renderTimelineView(containerEl) {
         </div>
       `).join('')}
     </div>
+    
+    <!-- Git-style Engineering Timeline -->
+    <div class="section-header" style="margin-top: 3rem; border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
+      <div class="section-title-group">
+        <div class="section-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><line x1="6" y1="9" x2="6" y2="21"></line></svg>
+        </div>
+        <div>
+          <h2 class="section-title">Git-Style Engineering Timeline</h2>
+          <p class="section-subtitle">Real-time commit history generated from execution events</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="glass-panel" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+      ${(state.gitCommits && state.gitCommits.length > 0) ? [...state.gitCommits].reverse().map(commit => `
+        <div style="display: flex; gap: 1rem; position: relative;">
+          <div style="display: flex; flex-direction: column; align-items: center; width: 24px;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg-primary); z-index: 2;"></div>
+            <div style="width: 2px; height: calc(100% + 1rem); background: var(--border-subtle); position: absolute; top: 12px; z-index: 1;"></div>
+          </div>
+          <div style="flex: 1; padding-bottom: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+              <span style="font-weight: 600; font-size: 0.9rem;">${commit.message}</span>
+              <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-tertiary);">${commit.timestamp}</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">
+              <span style="color: var(--accent); margin-right: 0.5rem;">${commit.hash}</span>
+              <span>by ${commit.author}</span>
+            </div>
+          </div>
+        </div>
+      `).join('') : '<div style="color: var(--text-tertiary); font-style: italic; font-size: 0.85rem;">No commits generated yet.</div>'}
+    </div>
   `;
 
   setTimeout(() => {

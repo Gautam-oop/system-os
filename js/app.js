@@ -130,6 +130,21 @@ function initApp() {
     if (tab === 'timeline' && views.timeline) renderTimelineView(views.timeline);
   });
 
+  store.subscribe('gitCommitsUpdated', () => {
+    const tab = store.getActiveTab();
+    if (tab === 'timeline' && views.timeline) renderTimelineView(views.timeline);
+  });
+  
+  store.subscribe('missionIntelligenceUpdated', () => {
+    const tab = store.getActiveTab();
+    if (tab === 'overview' && views.overview) renderMissionOverview(views.overview, true);
+  });
+
+  store.subscribe('projectExplorerUpdated', () => {
+    const tab = store.getActiveTab();
+    if (tab === 'overview' && views.overview) renderMissionOverview(views.overview, true);
+  });
+
   store.subscribe('activityLogsUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'activity' && views.activity) renderActivityFeed(views.activity);

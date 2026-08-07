@@ -12,6 +12,8 @@ const ROLE_TO_AGENT = {
   'PROJECT_MANAGER': { id: 'agent-pm', name: 'PM-Alpha' },
   'RESEARCH_ANALYST': { id: 'agent-research', name: 'Nexus' },
   'BACKEND_ENGINEER': { id: 'agent-backend', name: 'Titan' },
+  'DATABASE_ENGINEER': { id: 'agent-cipher', name: 'Cipher' },
+  'FRONTEND_ENGINEER': { id: 'agent-aura', name: 'Aura' },
   'QA_ENGINEER': { id: 'agent-qa', name: 'Spectre' },
   'CEO_FINAL': { id: 'agent-ceo', name: 'Alpha' }
 };
@@ -101,6 +103,14 @@ export class SimulationService {
         message: 'Mission sequence initiated.',
         category: 'SYSTEM'
       });
+      
+      this.store.state.gitCommits.push({
+        hash: Math.random().toString(16).slice(2, 9),
+        message: "Initialize Project",
+        timestamp: timeStr,
+        author: "System"
+      });
+      this.store.notify("gitCommitsUpdated", this.store.state.gitCommits);
       return;
     }
 
@@ -187,12 +197,231 @@ export class SimulationService {
             timestamp: timeStr
           });
 
-          // Special case: If PM finished, generate Kanban Tasks!
+          // Special case: PM milestones
           if (baseRole === "PROJECT_MANAGER" && payload.milestones) {
             this.generateTasksFromPM(payload.milestones, agentInfo.name);
+            if (!this.store.state.missionReport) this.store.state.missionReport = {};
+            this.store.state.missionReport.risks = payload.risks || [];
+          }
+          
+          // Special case: Architect blueprint
+          if (baseRole === "SOFTWARE_ARCHITECT" && payload.blueprint) {
+            if (!this.store.state.missionReport) this.store.state.missionReport = {};
+            this.store.state.missionReport.techStack = payload.blueprint.technology_stack || [];
+            this.store.state.missionReport.architecture = payload.blueprint.project_structure || "N/A";
           }
         }
       }
+      return;
+    }
+
+    if (event_type === "PROJECT_PACKAGED") {
+       if (payload) {
+          if (!this.store.state.missionReport) this.store.state.missionReport = {};
+          this.store.state.missionReport.downloadUrl = payload.download_url;
+          
+          const prettyPayload = this.formatPayloadToHTML(payload);
+          this.store.addWarRoomMessage({
+            role: "SYSTEM",
+            agentName: "System",
+            content: prettyPayload,
+            timestamp: timeStr
+          });
+       }
+       return;
+    }
+    
+    // Handle Iterative Execution Events
+    if (event_type === "MANIFEST_GENERATED") {
+      // Total files to generate
+      const files = Object.keys(payload || {});
+      this.store.state.missionIntelligence.remainingArtifacts = files.length;
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'System',
+        severity: 'INFO',
+        message: message,
+        category: 'SYSTEM'
+      });
+      return;
+    }
+    
+    if (event_type === "AGENT_THINKING") {
+      this.store.state.missionIntelligence.currentTask = payload.current_task || message;
+      this.store.state.missionIntelligence.confidenceScore = payload.confidence || 95;
+      this.store.state.missionIntelligence.eta = payload.estimated_completion || "N/A";
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      
+      const collabHtml = `
+        <div style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle); margin-top: 8px;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 6px;">🎯 What: <span style="font-weight: 400; color: var(--text-secondary);">${payload.current_task || 'Thinking...'}</span></div>
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 6px;">🧠 Why: <span style="font-weight: 400; color: var(--text-secondary);">${payload.reasoning_summary || 'Processing logic...'}</span></div>
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 6px;">🤝 Needs: <span style="font-weight: 400; color: var(--accent);">${(payload.dependencies_needed || []).join(", ") || 'None'}</span></div>
+          <div style="font-size: 0.75rem; color: var(--text-tertiary); display: flex; gap: 12px; margin-top: 8px;">
+            <span>Confidence: <strong>${payload.confidence || 95}%</strong></span>
+            <span>ETA: <strong>${payload.estimated_completion || 'N/A'}</strong></span>
+          </div>
+        </div>
+      `;
+      
+      this.store.addWarRoomMessage({
+        role: "SYSTEM",
+        agentName: payload.agent_name || "System",
+        content: collabHtml,
+        timestamp: timeStr
+      });
+      return;
+    }
+    
+    if (event_type === "ARTIFACT_GENERATED") {
+      this.store.state.missionIntelligence.currentFile = payload.file;
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      return;
+    }
+
+    if (event_type === "FILE_WRITTEN") {
+      this.store.setTypingAgent(null);
+      this.store.state.missionIntelligence.validationStatus = "Passed";
+      this.store.state.missionIntelligence.remainingArtifacts = Math.max(0, this.store.state.missionIntelligence.remainingArtifacts - 1);
+      
+      // Update Project Explorer
+      if (payload && payload.file) {
+          this.store.state.projectExplorer.files.push(payload.file);
+          this.store.notify("projectExplorerUpdated", this.store.state.projectExplorer);
+          
+          this.store.state.gitCommits.push({
+            hash: Math.random().toString(16).slice(2, 9),
+            message: `Implement ${payload.file.split('/').pop()}`,
+            timestamp: timeStr,
+            author: "Agent"
+          });
+          this.store.notify("gitCommitsUpdated", this.store.state.gitCommits);
+      }
+      
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'System',
+        severity: 'SUCCESS',
+        message: message,
+        category: 'SYSTEM'
+      });
+      return;
+    }
+    
+    if (event_type === "VALIDATION_FAILED") {
+      this.store.state.missionIntelligence.validationStatus = "Failed";
+      this.store.state.missionIntelligence.confidenceScore = Math.max(0, this.store.state.missionIntelligence.confidenceScore - 5);
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'Validator',
+        severity: 'WARNING',
+        message: message,
+        category: 'SYSTEM'
+      });
+      return;
+    }
+    
+    // Handle Build & Repair Events
+    if (event_type === "BUILD_STARTED") {
+      this.store.state.missionIntelligence.buildProgress = 50;
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'Builder',
+        severity: 'INFO',
+        message: message,
+        category: 'SYSTEM'
+      });
+      return;
+    }
+    
+    if (event_type === "BUILD_SUCCESS") {
+      this.store.state.missionIntelligence.buildProgress = 100;
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'Builder',
+        severity: 'SUCCESS',
+        message: message,
+        category: 'SYSTEM'
+      });
+      
+      this.store.state.gitCommits.push({
+        hash: Math.random().toString(16).slice(2, 9),
+        message: "Prepare Deployment",
+        timestamp: timeStr,
+        author: "Build Server"
+      });
+      this.store.notify("gitCommitsUpdated", this.store.state.gitCommits);
+      
+      if (payload) {
+         this.store.addWarRoomMessage({
+            role: "SYSTEM",
+            agentName: "Build Server",
+            content: this.formatPayloadToHTML(payload),
+            timestamp: timeStr
+         });
+      }
+      return;
+    }
+    
+    if (event_type === "BUILD_FAILED") {
+      this.store.state.missionIntelligence.buildProgress = 0;
+      this.store.state.missionIntelligence.confidenceScore = Math.max(0, this.store.state.missionIntelligence.confidenceScore - 10);
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'Builder',
+        severity: 'ERROR',
+        message: message,
+        category: 'SYSTEM'
+      });
+      
+      if (payload) {
+         this.store.addWarRoomMessage({
+            role: "SYSTEM",
+            agentName: "Build Server",
+            content: this.formatPayloadToHTML(payload),
+            timestamp: timeStr
+         });
+      }
+      return;
+    }
+    
+    if (event_type === "REPAIR_STARTED") {
+      this.store.state.missionIntelligence.activeRepair = message;
+      this.store.notify("missionIntelligenceUpdated", this.store.state.missionIntelligence);
+      
+      let generatingAgentName = 'System';
+      if (message.includes('Backend Engineer')) generatingAgentName = ROLE_TO_AGENT['BACKEND_ENGINEER'].name;
+      else if (message.includes('Frontend Engineer')) generatingAgentName = ROLE_TO_AGENT['FRONTEND_ENGINEER'].name;
+      else if (message.includes('Database Engineer')) generatingAgentName = ROLE_TO_AGENT['DATABASE_ENGINEER'].name;
+      else if (message.includes('QA Engineer')) generatingAgentName = ROLE_TO_AGENT['QA_ENGINEER'].name;
+      
+      this.store.state.gitCommits.push({
+        hash: Math.random().toString(16).slice(2, 9),
+        message: `Fix compiler errors`,
+        timestamp: timeStr,
+        author: generatingAgentName
+      });
+      this.store.notify("gitCommitsUpdated", this.store.state.gitCommits);
+      
+      this.store.setTypingAgent(generatingAgentName);
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: generatingAgentName,
+        severity: 'WARNING',
+        message: message,
+        category: 'WORKFLOW'
+      });
       return;
     }
   }
@@ -209,12 +438,20 @@ export class SimulationService {
       html += `<div style="margin-bottom: 8px;">`;
       html += `<strong style="color: var(--accent);">${humanKey}:</strong> `;
       
-      if (Array.isArray(value)) {
+      if (key === 'files') {
+        html += `<ul style="margin: 4px 0 0 20px; padding: 0;">`;
+        for (const filename of Object.keys(value)) {
+          html += `<li><code style="background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">${filename}</code></li>`;
+        }
+        html += `</ul>`;
+      } else if (Array.isArray(value)) {
         html += `<ul style="margin: 4px 0 0 20px; padding: 0;">`;
         value.forEach(item => {
           html += `<li>${item}</li>`;
         });
         html += `</ul>`;
+      } else if (key === 'download_url') {
+        html += `<a href="${value}" download target="_blank" style="color: var(--accent); text-decoration: underline;">Download Workspace (.zip)</a>`;
       } else {
         html += `<span>${value}</span>`;
       }
