@@ -1,666 +1,255 @@
 /* ==========================================================================
-   MISSIONOS - AUTONOMOUS AI WORKFORCE SIMULATION ENGINE
-   Emits dense, role-specific per-agent terminal logs showing exactly
-   what each AI teammate is doing in real-time.
+   MISSIONOS - LIVE AI WORKFORCE EVENT ENGINE
+   Connects to the FastAPI backend EventSource to reflect real-time execution.
    ========================================================================== */
 
 import { agentService } from './AgentService.js';
+import { apiService } from '../apiService.js';
 
-// ─── Role-Specific Log Templates ────────────────────────────────────────────
-// Each agent type has a pool of realistic terminal lines grouped by phase.
-
-const AGENT_LOG_POOLS = {
-  frontend: {
-    planning: [
-      'Analyzing design requirements from Figma spec...',
-      'Parsing component tree structure for page layout...',
-      'Evaluating accessibility (a11y) compliance requirements...',
-      'Mapping user flow wireframes to React component hierarchy...',
-      'Identifying reusable design tokens: --primary, --accent, --surface...',
-      'Reading style guide: Inter 600 for headings, JetBrains Mono for code...',
-    ],
-    scaffolding: [
-      'Scaffolding React project with Vite + TypeScript template...',
-      'Installing dependencies: react-router, framer-motion, lucide-react...',
-      'Creating directory structure: /components /hooks /styles /utils...',
-      'Generating tsconfig.json with strict mode enabled...',
-      'Setting up CSS Modules with PostCSS autoprefixer...',
-      'Configuring path aliases: @/components, @/hooks, @/lib...',
-    ],
-    development: [
-      'Writing src/components/Dashboard.tsx — main layout grid...',
-      'Implementing glassmorphism card: backdrop-filter: blur(16px)...',
-      'Creating useMediaQuery() hook for responsive breakpoints...',
-      'Building animated progress bar with CSS transitions...',
-      'Styling sidebar navigation with active state indicators...',
-      'Adding micro-interaction: hover scale(1.02) on card components...',
-      'Implementing dark/light theme toggle with CSS custom properties...',
-      'Writing src/components/MetricCard.tsx — stat counter widget...',
-      'Creating reusable <Badge /> component with variant props...',
-      'Building responsive data table with sticky header...',
-      'Implementing skeleton loading states for async content...',
-      'Adding smooth page transition animations with opacity/transform...',
-    ],
-    testing: [
-      'Running ESLint with --fix across 24 component files...',
-      'Verifying WCAG 2.1 AA contrast ratios on all text elements...',
-      'Testing responsive layout at 320px, 768px, 1024px, 1440px...',
-      'Checking hydration consistency between SSR and client render...',
-      'Validating all interactive elements have focus-visible outlines...',
-      'Running Lighthouse audit: Performance 98, Accessibility 100...',
-    ],
-    deployment: [
-      'Building production bundle: vite build --mode production...',
-      'Tree-shaking reduced bundle: 245KB → 89KB gzipped...',
-      'Generating source maps for production debugging...',
-      'Uploading static assets to CDN edge nodes...',
-      'Verifying cache headers: max-age=31536000 for hashed assets...',
-      '✓ Frontend build deployed successfully to staging...',
-    ]
-  },
-  backend: {
-    planning: [
-      'Analyzing API specification from OpenAPI 3.0 schema...',
-      'Mapping database entity relationships for ERD diagram...',
-      'Evaluating authentication strategy: JWT RS256 vs HS256...',
-      'Planning REST endpoint structure: /api/v1/users, /tasks, /missions...',
-      'Reviewing rate limiting requirements: 100 req/min per client...',
-      'Identifying N+1 query patterns in existing ORM layer...',
-    ],
-    scaffolding: [
-      'Initializing FastAPI project with Uvicorn ASGI server...',
-      'Creating SQLAlchemy models: User, Task, Mission, Agent...',
-      'Generating Alembic migration: create_users_table...',
-      'Setting up connection pooling: pool_size=20, max_overflow=10...',
-      'Configuring CORS middleware for frontend origin...',
-      'Creating Pydantic schemas for request/response validation...',
-    ],
-    development: [
-      'Writing POST /api/v1/tasks endpoint with validation...',
-      'Implementing JWT token generation with 15min expiry...',
-      'Creating database index on tasks.created_at for query optimization...',
-      'Building WebSocket handler for real-time agent status updates...',
-      'Implementing pagination: cursor-based with 50 items/page...',
-      'Writing middleware: request logging with correlation IDs...',
-      'Creating background job queue for async task processing...',
-      'Implementing Redis cache layer: TTL 300s for mission data...',
-      'Writing PATCH /api/v1/tasks/:id with optimistic locking...',
-      'Building aggregation pipeline for analytics dashboard...',
-      'Implementing rate limiter with sliding window algorithm...',
-      'Creating health check endpoint: /api/health with DB ping...',
-    ],
-    testing: [
-      'Running pytest suite: 47 tests across 8 modules...',
-      'Testing database migrations: upgrade → downgrade → upgrade...',
-      'Verifying JWT token refresh flow with expired tokens...',
-      'Load testing with locust: 500 concurrent users, p99 < 50ms...',
-      'Checking SQL injection prevention on all query parameters...',
-      'Validating error responses match RFC 7807 Problem Details...',
-    ],
-    deployment: [
-      'Building Docker image: python:3.12-slim with multi-stage...',
-      'Running database migration on staging: 3 pending migrations...',
-      'Deploying to Kubernetes: 3 replicas with rolling update...',
-      'Configuring health probes: liveness /health, readiness /ready...',
-      'Setting up HPA: min 2, max 8 pods, CPU threshold 70%...',
-      '✓ Backend API deployed and passing health checks...',
-    ]
-  },
-  qa: {
-    planning: [
-      'Analyzing test coverage gaps from latest sprint diff...',
-      'Creating test plan document for 12 user story scenarios...',
-      'Mapping critical path flows: signup → login → dashboard → task...',
-      'Identifying regression risk areas from git blame analysis...',
-      'Setting up test data fixtures with faker.js...',
-      'Reviewing browser compatibility matrix: Chrome, Firefox, Safari...',
-    ],
-    scaffolding: [
-      'Initializing Cypress project with TypeScript support...',
-      'Installing Playwright for cross-browser testing...',
-      'Creating page object models: LoginPage, DashboardPage...',
-      'Setting up MSW (Mock Service Worker) for API mocking...',
-      'Configuring visual regression with percy snapshots...',
-      'Creating CI pipeline: test → coverage → report...',
-    ],
-    development: [
-      'Writing E2E spec: auth.login.cy.ts — happy path flow...',
-      'Testing task creation modal: input validation, submit, toast...',
-      'Verifying agent status transitions: Idle → Working → Complete...',
-      'Writing API integration test: POST /tasks → 201 response...',
-      'Testing responsive layout breakpoints on mobile viewport...',
-      'Validating WebSocket reconnection after network disconnect...',
-      'Writing load test scenario: 200 concurrent task submissions...',
-      'Testing edge case: empty state when no tasks exist...',
-      'Verifying CSRF protection on all mutation endpoints...',
-      'Testing session expiry flow: 401 → refresh → retry...',
-      'Writing accessibility test: keyboard navigation through sidebar...',
-      'Validating data persistence after browser refresh...',
-    ],
-    testing: [
-      'Running full Cypress suite: 42/42 specs passing ✓...',
-      'Executing Playwright cross-browser: Chrome ✓ Firefox ✓ Safari ✓...',
-      'Generating Istanbul coverage report: 94.2% line coverage...',
-      'Running mutation testing with Stryker: 87% mutation score...',
-      'Validating performance budget: LCP < 2.5s, FID < 100ms...',
-      'Checking for console errors across all page navigations...',
-    ],
-    deployment: [
-      'Publishing test results to TestRail dashboard...',
-      'Generating HTML coverage report artifact...',
-      'Uploading Cypress screenshots and videos to S3...',
-      'Creating QA sign-off document for release v2.4.1...',
-      'Notifying team: All regression tests passed cleanly...',
-      '✓ QA verification complete — release approved...',
-    ]
-  },
-  research: {
-    planning: [
-      'Defining research scope: competitor analysis + LLM benchmarks...',
-      'Collecting data sources: Crunchbase, G2, ProductHunt...',
-      'Mapping evaluation criteria: performance, pricing, features...',
-      'Setting up vector database for document embeddings...',
-      'Creating research timeline with 4 milestone checkpoints...',
-      'Identifying key metrics: token/s, context window, accuracy...',
-    ],
-    scaffolding: [
-      'Initializing Jupyter notebook environment with CUDA support...',
-      'Installing transformers, langchain, chromadb, pandas...',
-      'Loading pre-trained sentence-transformers/all-MiniLM-L6-v2...',
-      'Connecting to PostgreSQL for structured data storage...',
-      'Setting up API keys for OpenAI, Anthropic, Cohere...',
-      'Creating data pipeline: ingest → clean → embed → index...',
-    ],
-    development: [
-      'Ingesting 2,400 competitor product data points from APIs...',
-      'Generating embeddings for 850 technical documentation pages...',
-      'Running similarity search: cosine distance threshold 0.82...',
-      'Building comparison matrix: 12 products × 24 feature dimensions...',
-      'Training classification model on user intent categories...',
-      'Analyzing API latency benchmarks across 6 LLM providers...',
-      'Computing cost-efficiency ratios: tokens/dollar analysis...',
-      'Cross-referencing patent filings with feature roadmaps...',
-      'Building interactive visualization: radar chart + heatmap...',
-      'Generating executive summary with key insights...',
-      'Running A/B analysis on prompt engineering strategies...',
-      'Benchmarking RAG pipeline: precision 0.94, recall 0.91...',
-    ],
-    testing: [
-      'Validating data integrity: checksums on 2,400 records...',
-      'Cross-checking competitor pricing against public sources...',
-      'Running statistical significance tests on benchmark results...',
-      'Verifying visualization accuracy against raw data...',
-      'Peer review: submitting findings for team validation...',
-      'Checking for data bias in training dataset distribution...',
-    ],
-    deployment: [
-      'Exporting research report to PDF and Notion workspace...',
-      'Publishing interactive dashboard to internal analytics...',
-      'Archiving raw datasets to S3 with versioning enabled...',
-      'Creating API endpoint for real-time competitor tracking...',
-      'Setting up weekly automated data refresh pipeline...',
-      '✓ Research deliverables published and shared with team...',
-    ]
-  },
-  devops: {
-    planning: [
-      'Auditing current infrastructure: 3 services, 2 databases...',
-      'Planning CI/CD pipeline: build → test → stage → canary → prod...',
-      'Evaluating container orchestration: ECS vs Kubernetes...',
-      'Mapping DNS and load balancer configuration requirements...',
-      'Reviewing security group rules and network ACLs...',
-      'Estimating infrastructure costs: $240/month target budget...',
-    ],
-    scaffolding: [
-      'Creating Dockerfile with multi-stage build optimization...',
-      'Writing docker-compose.yml for local development stack...',
-      'Initializing Terraform modules: vpc, ecs, rds, s3...',
-      'Setting up GitHub Actions workflow: .github/workflows/ci.yml...',
-      'Configuring secrets manager for environment variables...',
-      'Creating Helm chart templates for Kubernetes deployment...',
-    ],
-    development: [
-      'Building CI pipeline: lint → test → build → push to ECR...',
-      'Implementing blue-green deployment strategy with ALB...',
-      'Creating auto-scaling policy: CPU > 70% → scale out...',
-      'Setting up CloudWatch alarms: 5xx rate > 1% → PagerDuty...',
-      'Implementing log aggregation with Fluentd → Elasticsearch...',
-      'Creating Grafana dashboards for API latency monitoring...',
-      'Writing Terraform for RDS: Multi-AZ, automated backups...',
-      'Implementing SSL/TLS termination at load balancer level...',
-      'Creating database backup cron: daily snapshots, 30-day retention...',
-      'Setting up CDN distribution for static frontend assets...',
-      'Implementing zero-downtime deployment with health checks...',
-      'Creating runbook for incident response procedures...',
-    ],
-    testing: [
-      'Running terraform plan: 12 resources to create, 0 to destroy...',
-      'Testing container health checks: /health returns 200 in 2s...',
-      'Verifying auto-scaling: simulating CPU spike to 85%...',
-      'Testing backup restoration: RDS snapshot → new instance...',
-      'Validating SSL certificate chain with ssllabs.com A+ rating...',
-      'Running chaos engineering: killing 1/3 pods, verifying recovery...',
-    ],
-    deployment: [
-      'Applying Terraform: creating 12 infrastructure resources...',
-      'Pushing Docker image: v2.4.1 to container registry...',
-      'Deploying canary: 10% traffic to new version...',
-      'Monitoring canary metrics: error rate 0%, p99 latency 45ms...',
-      'Promoting canary to 100% traffic — deployment successful...',
-      '✓ Infrastructure deployed and all monitors green...',
-    ]
-  },
-  security: {
-    planning: [
-      'Reviewing OWASP Top 10 checklist against current codebase...',
-      'Mapping authentication flow: OAuth2 + JWT with key rotation...',
-      'Identifying sensitive data paths: PII, tokens, credentials...',
-      'Planning penetration test scope: 8 endpoints, 3 attack vectors...',
-      'Reviewing dependency tree for known CVE vulnerabilities...',
-      'Creating threat model diagram with STRIDE methodology...',
-    ],
-    scaffolding: [
-      'Setting up SAST scanner: semgrep with custom rule set...',
-      'Configuring Snyk for continuous dependency monitoring...',
-      'Installing OWASP ZAP for dynamic security testing...',
-      'Creating secret scanning pre-commit hook with gitleaks...',
-      'Setting up certificate rotation automation with certbot...',
-      'Configuring CSP headers: script-src, style-src, img-src...',
-    ],
-    development: [
-      'Implementing RS256 JWT key pair rotation (90-day cycle)...',
-      'Adding bcrypt password hashing with cost factor 12...',
-      'Creating rate limiter: 100 req/min per IP with Redis backend...',
-      'Implementing CSRF token validation on all POST endpoints...',
-      'Adding input sanitization middleware: XSS prevention...',
-      'Creating audit log table: who, what, when, from_ip...',
-      'Implementing IP allowlist for admin API endpoints...',
-      'Adding Helmet.js security headers middleware...',
-      'Creating session invalidation on password change...',
-      'Implementing account lockout after 5 failed login attempts...',
-      'Adding SQL parameterization audit across all query builders...',
-      'Creating encrypted backup pipeline with AES-256-GCM...',
-    ],
-    testing: [
-      'Running semgrep SAST scan: 0 critical, 0 high findings...',
-      'Executing OWASP ZAP active scan against staging API...',
-      'Testing JWT token expiry and refresh token rotation...',
-      'Verifying password hash cannot be reversed from database...',
-      'Testing CORS policy: rejecting unauthorized origins...',
-      'Running Snyk audit: 0 vulnerabilities in dependency tree...',
-    ],
-    deployment: [
-      'Rotating production JWT signing keys (RSA-2048)...',
-      'Deploying updated CSP headers to production CDN...',
-      'Publishing security audit report to compliance dashboard...',
-      'Updating SSL certificates: valid for 90 days...',
-      'Enabling real-time threat detection with WAF rules...',
-      '✓ Security audit passed — zero vulnerabilities detected...',
-    ]
-  }
+// Map backend agent roles to UI agent IDs
+const ROLE_TO_AGENT = {
+  'CEO': { id: 'agent-ceo', name: 'Alpha' },
+  'PROJECT_MANAGER': { id: 'agent-pm', name: 'PM-Alpha' },
+  'RESEARCH_ANALYST': { id: 'agent-research', name: 'Nexus' },
+  'BACKEND_ENGINEER': { id: 'agent-backend', name: 'Titan' },
+  'QA_ENGINEER': { id: 'agent-qa', name: 'Spectre' },
+  'CEO_FINAL': { id: 'agent-ceo', name: 'Alpha' }
 };
-
-// Map agent IDs to their log pool role
-const AGENT_ROLE_MAP = {
-  'agent-aura':    'frontend',
-  'agent-design':  'frontend',
-  'agent-titan':   'backend',
-  'agent-backend': 'backend',
-  'agent-cipher':  'security',
-  'agent-security':'security',
-  'agent-vortex':  'devops',
-  'agent-devops':  'devops',
-  'agent-spectre': 'qa',
-  'agent-qa':      'qa',
-  'agent-nexus':   'research',
-  'agent-research':'research',
-  'agent-pm':      'research'
-};
-
-// Phase order for task subtask progression
-const PHASE_ORDER = ['planning', 'scaffolding', 'development', 'testing', 'deployment'];
 
 export class SimulationService {
   constructor(store) {
     this.store = store;
-    this.timer = null;
+    this.eventSource = null;
     this.isRunning = false;
-    this.stepCount = 0;
-    this.completed = false;
-
-    // Track which log index each agent is at within each phase
-    this.agentLogCursors = {};
-    
-    // Enterprise Features: Approval Gates & Conversational Threads
-    this.approvalMilestones = {
-      dbChoice: false,
-      frameworkChoice: false,
-      deployTarget: false
-    };
-    
-    this.chatQueue = [];
-    this.chatDelayCounter = 0;
-    this.activeThreads = new Set();
-    
-    this.threadTemplates = {
-      planning: [
-        { role: 'Project Manager', name: 'PM-Alpha', content: "I've reviewed the requirements for [Task]. UI, what's your take on the scope?" },
-        { role: 'UI Designer', name: 'Aura', content: "Wireframes are looking good. I'll need Backend to confirm the API schema before I finalize the state." },
-        { role: 'Backend Engineer', name: 'Titan', content: "API schema is drafted. Let's sync on the endpoints after the planning phase." }
-      ],
-      scaffolding: [
-        { role: 'DevOps', name: 'Vortex', content: "Setting up the local Docker containers and CI/CD stubs for [Task]..." },
-        { role: 'Backend Engineer', name: 'Titan', content: "Thanks Vortex. I'm migrating the DB schemas now." }
-      ],
-      development: [
-        { role: 'UI Designer', name: 'Aura', content: "Component library is updated for [Task]. Integrating the logic now." },
-        { role: 'Backend Engineer', name: 'Titan', content: "The new routes are deployed to the internal staging environment." },
-        { role: 'QA Engineer', name: 'Spectre', content: "I'll start writing the integration tests based on those routes." }
-      ],
-      testing: [
-        { role: 'QA Engineer', name: 'Spectre', content: "I've started running the Cypress suites on [Task]." },
-        { role: 'QA Engineer', name: 'Spectre', content: "Wait, I'm seeing a failure on the auth redirect. Aura, can you check?" },
-        { role: 'UI Designer', name: 'Aura', content: "Ah, I missed the router guard condition. Pushing a hotfix now." },
-        { role: 'QA Engineer', name: 'Spectre', content: "Fix confirmed. Green build across the board." }
-      ],
-      deployment: [
-        { role: 'DevOps', name: 'Vortex', content: "Deploying [Task] to the production target..." },
-        { role: 'Project Manager', name: 'PM-Alpha', content: "Let me know when it's live so I can do a final sanity check before marking complete." }
-      ]
-    };
   }
 
-  startSimulation(intervalMs = 2500) {
+  startSimulation() {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    // Set initial agents in store
-    this.store.state.agents = agentService.getAgents();
+    // Reset agents to idle
+    const agents = agentService.getAgents();
+    agents.forEach(a => {
+      a.status = 'Idle';
+      a.progress = 0;
+      a.currentTask = 'Awaiting Orders';
+    });
+    this.store.state.agents = agents;
     this.store.notify("agentsUpdated", this.store.state.agents);
 
-    // First tick at t=500ms
-    setTimeout(() => { this.tick(); }, 500);
+    // Initialize EventSource
+    this.eventSource = new EventSource('/api/stream');
+    
+    this.eventSource.onmessage = (e) => {
+      try {
+        const event = JSON.parse(e.data);
+        this.handleEvent(event);
+      } catch (err) {
+        console.error("Error parsing SSE event:", err);
+      }
+    };
 
-    // Main loop
-    this.timer = setInterval(() => { this.tick(); }, intervalMs);
+    this.eventSource.onerror = (err) => {
+      console.error("EventSource error:", err);
+      // It might auto-reconnect, or we can close it if the mission is done
+    };
+
+    // Trigger the backend pipeline asynchronously
+    // Use the mission metadata from the store
+    const mission = this.store.state.mission;
+    const payload = {
+      name: mission.name || 'Build a Resume Analyzer',
+      description: mission.description || 'AI powered resume analyzer',
+      targetETA: mission.targetETA || '2 days',
+      leadDirector: mission.commanderId || 'emp_001'
+    };
+
+    fetch('/api/mission/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(res => res.json()).then(data => {
+      console.log("Mission execution completed:", data);
+      // The final state can be verified, but the UI is already updated via SSE!
+    }).catch(err => {
+      console.error("Mission run failed:", err);
+      this.store.notify('toast', { type: 'error', text: 'Mission execution failed on the backend.' });
+    });
   }
 
   stopSimulation() {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
     }
     this.isRunning = false;
   }
 
-  // ─── Determine which phase a task is in based on progress ─────────
-  getTaskPhase(task) {
-    const p = task.progress || 0;
-    if (p < 15) return 'planning';
-    if (p < 30) return 'scaffolding';
-    if (p < 70) return 'development';
-    if (p < 90) return 'testing';
-    return 'deployment';
-  }
+  handleEvent(event) {
+    const { event_type, message, payload, timestamp } = event;
+    const timeStr = new Date(timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  // ─── Get a log line for a specific agent/phase combo ──────────────
-  getAgentLogLine(agentId, phase) {
-    const role = AGENT_ROLE_MAP[agentId] || 'research';
-    const pool = AGENT_LOG_POOLS[role];
-    if (!pool || !pool[phase]) return null;
+    console.log(`[SSE EVENT] ${event_type}`, event);
 
-    const lines = pool[phase];
-    const cursorKey = `${agentId}_${phase}`;
-    if (!this.agentLogCursors[cursorKey]) this.agentLogCursors[cursorKey] = 0;
-
-    const idx = this.agentLogCursors[cursorKey] % lines.length;
-    this.agentLogCursors[cursorKey] = idx + 1;
-    return lines[idx];
-  }
-
-  // ─── Main Simulation Tick ─────────────────────────────────────────
-  tick() {
-    if (this.store.state.pendingApproval) return; // Pause for human gate
-    
-    // Process Chat Queue
-    if (this.chatQueue.length > 0) {
-      if (this.chatDelayCounter <= 0) {
-        const nextMsg = this.chatQueue.shift();
-        this.store.setTypingAgent(null);
-        this.store.addWarRoomMessage({
-          role: nextMsg.role,
-          agentName: nextMsg.name,
-          content: nextMsg.content,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        
-        // Random delay before next message (0 to 1 ticks for fast pacing)
-        if (this.chatQueue.length > 0) {
-          this.chatDelayCounter = Math.floor(Math.random() * 2); 
-          this.store.setTypingAgent(this.chatQueue[0].name); // Set next agent as typing
-        }
-      } else {
-        this.chatDelayCounter--;
-      }
-    } else {
-      this.store.setTypingAgent(null);
+    if (event_type === "MISSION_STARTED") {
+      this.store.state.mission.overallProgress = 10;
+      this.store.notify("missionUpdated", this.store.state.mission);
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'System',
+        severity: 'INFO',
+        message: 'Mission sequence initiated.',
+        category: 'SYSTEM'
+      });
+      return;
     }
 
-    this.stepCount += 1;
-    const tasks = this.store.state.tasks || [];
-
-    // ── 1. Process each active task: advance progress + emit agent logs ──
-    tasks.forEach(task => {
-      if (task.status !== 'ai_executing' && task.status !== 'in_progress') return;
-
-      // Advance progress
-      const increment = Math.floor(Math.random() * 5 + 2);
-      task.progress = Math.min(98, (task.progress || 0) + increment);
-
-      // Determine current phase
-      const phase = this.getTaskPhase(task);
-      const phaseIdx = PHASE_ORDER.indexOf(phase);
-
-      // Update subtask statuses based on phase
-      if (task.subtasks && task.subtasks.length > 0) {
-        task.subtasks.forEach((sub, i) => {
-          if (i < phaseIdx) {
-            sub.done = true;
-            sub.status = 'completed';
-          } else if (i === phaseIdx) {
-            sub.status = 'executing';
-            sub.done = false;
-          } else {
-            sub.status = 'pending';
-            sub.done = false;
-          }
-        });
-
-        // Trigger Phase Thread dynamically as task changes phase
-        const threadKey = `${task.id}_${phase}`;
-        if (!this.activeThreads.has(threadKey) && this.threadTemplates[phase]) {
-          this.activeThreads.add(threadKey);
-          
-          // Enqueue the thread
-          const script = this.threadTemplates[phase];
-          script.forEach(msg => {
-            this.chatQueue.push({
-              role: msg.role,
-              name: msg.name,
-              content: msg.content.replace('[Task]', task.title)
-            });
-          });
-          
-          // Set initial typing indicator if queue was empty
-          if (this.chatQueue.length === script.length) {
-            this.chatDelayCounter = 0; // immediate start
-            this.store.setTypingAgent(this.chatQueue[0].name);
-          }
-        }
-
-        // If progress >= 98, mark all complete
-        if (task.progress >= 98) {
-          task.subtasks.forEach(s => { s.done = true; s.status = 'completed'; });
-          task.status = 'completed';
-          task.progress = 100;
-          
-          this.store.addWarRoomMessage({
-            role: 'Project Manager',
-            agentName: 'PM-Alpha',
-            content: `Task "${task.title}" has been successfully completed.`,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          });
-        }
-      }
-
-      // Enterprise Features: Trigger Approval Gates based on overall progress
-      const overallProg = this.store.state.mission?.overallProgress || 0;
+    if (event_type === "MISSION_COMPLETED") {
+      this.store.state.mission.overallProgress = 100;
+      this.store.state.mission.status = 'Completed';
       
-      if (overallProg >= 20 && !this.approvalMilestones.dbChoice) {
-        this.approvalMilestones.dbChoice = true;
-        this.store.addWarRoomMessage({ role: 'Backend Engineer', agentName: 'Titan', content: 'We need to decide on the primary database architecture before I begin the data layer.', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-        this.store.setPendingApproval({
-          id: 'dbChoice',
-          title: 'Choose Database Architecture',
-          description: 'The backend engineers require a decision on the primary database.',
-          options: ['PostgreSQL', 'MongoDB']
-        });
-        return; // Break tick
-      }
+      // Update all agents to completed
+      this.store.state.agents.forEach(a => {
+        a.status = 'Completed';
+        a.progress = 100;
+        a.currentTask = 'Mission Accomplished';
+      });
+      this.store.notify("agentsUpdated", this.store.state.agents);
+      this.store.notify("missionUpdated", this.store.state.mission);
       
-      if (overallProg >= 50 && !this.approvalMilestones.frameworkChoice) {
-        this.approvalMilestones.frameworkChoice = true;
-        this.store.addWarRoomMessage({ role: 'Backend Engineer', agentName: 'Titan', content: 'Moving to API service layer. Need architectural sign-off on the backend framework.', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-        this.store.setPendingApproval({
-          id: 'frameworkChoice',
-          title: 'Choose Backend Framework',
-          description: 'Select the optimal framework for our microservices architecture.',
-          options: ['FastAPI', 'Spring Boot', 'Express.js']
-        });
-        return; // Break tick
-      }
+      this.store.addActivityLog({
+        timestamp: timeStr,
+        agentName: 'System',
+        severity: 'SUCCESS',
+        message: '🏆 Mission completed! All AI workflows verified.',
+        category: 'SYSTEM'
+      });
       
-      if (overallProg >= 85 && !this.approvalMilestones.deployTarget) {
-        this.approvalMilestones.deployTarget = true;
-        this.store.addWarRoomMessage({ role: 'DevOps', agentName: 'Vortex', content: 'Staging is green. Awaiting final authorization for production deployment target.', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-        this.store.setPendingApproval({
-          id: 'deployTarget',
-          title: 'Deploy to Production',
-          description: 'Choose the cloud provider for the final production deployment.',
-          options: ['Vercel', 'AWS', 'Google Cloud']
-        });
-        return; // Break tick
-      }
+      this.store.notify("missionCompleted", this.store.state);
+      this.stopSimulation();
+      return;
+    }
 
-
-      // ── Emit per-agent detailed logs ──
-      const agentId = task.assignedAgentId;
-      if (agentId) {
-        // Emit 1-2 log lines per tick for this agent
-        const numLines = Math.random() > 0.4 ? 2 : 1;
-        for (let i = 0; i < numLines; i++) {
-          const logMsg = this.getAgentLogLine(agentId, phase);
-          if (logMsg) {
-            const severity = phase === 'deployment' && logMsg.startsWith('✓') ? 'SUCCESS' :
-                            phase === 'testing' ? 'WARN' : 'INFO';
-            this.store.addAgentLog(agentId, logMsg, severity);
-          }
-        }
-
-        // Update agent object status
-        const agent = (this.store.state.agents || []).find(a => a.id === agentId);
+    // Handle Agent _STARTED events
+    if (event_type.endsWith("_STARTED")) {
+      const baseRole = event_type.replace("_STARTED", "");
+      const agentInfo = ROLE_TO_AGENT[baseRole];
+      if (agentInfo) {
+        this.store.setTypingAgent(agentInfo.name);
+        
+        // Update Agent UI Status
+        const agent = this.store.state.agents.find(a => a.id === agentInfo.id);
         if (agent) {
-          if (task.status === 'completed') {
-            agent.status = 'Completed';
-            agent.progress = 100;
-            agent.currentTask = `✓ Completed: ${task.title}`;
-          } else {
-            agent.status = 'Working';
-            agent.progress = task.progress;
-            agent.currentTask = `[${task.id}] ${task.title}`;
-          }
+          agent.status = 'Working';
+          agent.progress = 50;
+          agent.currentTask = message || 'Executing directive...';
+          this.store.notify("agentsUpdated", this.store.state.agents);
         }
-      }
-    });
 
-    // ── 2. Emit a global activity log every 3rd tick ──
-    if (this.stepCount % 3 === 0) {
-      const activeTasks = tasks.filter(t => t.status === 'ai_executing' || t.status === 'in_progress');
-      if (activeTasks.length > 0) {
-        const rTask = activeTasks[Math.floor(Math.random() * activeTasks.length)];
-        const phase = this.getTaskPhase(rTask);
-        const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
         this.store.addActivityLog({
           timestamp: timeStr,
-          agentName: rTask.assignedAgentName || 'Agent',
-          agentId: rTask.assignedAgentId || 'system',
-          severity: phase === 'deployment' ? 'SUCCESS' : 'INFO',
-          message: `[${rTask.id}] ${phase.charAt(0).toUpperCase() + phase.slice(1)} phase — ${rTask.progress}% complete`,
+          agentName: agentInfo.name,
+          severity: 'INFO',
+          message: `${agentInfo.name} began execution: ${message}`,
           category: 'WORKFLOW'
         });
       }
+      return;
     }
 
-    // ── 3. Notify task updates ──
-    this.store.notify("tasksUpdated", this.store.state.tasks);
+    // Handle Agent _FINISHED events
+    if (event_type.endsWith("_FINISHED")) {
+      const baseRole = event_type.replace("_FINISHED", "");
+      const agentInfo = ROLE_TO_AGENT[baseRole];
+      if (agentInfo) {
+        this.store.setTypingAgent(null);
 
-    // ── 4. Update mission progress ──
-    if (this.store.state.mission) {
-      const currentProg = this.store.state.mission.overallProgress || 68;
-      if (currentProg < 100) {
-        const bump = Math.floor(Math.random() * 2 + 1);
-        this.store.state.mission.overallProgress = Math.min(100, currentProg + bump);
+        // Update Agent UI Status
+        const agent = this.store.state.agents.find(a => a.id === agentInfo.id);
+        if (agent) {
+          agent.status = 'Completed';
+          agent.progress = 100;
+          agent.currentTask = 'Execution finished.';
+          this.store.notify("agentsUpdated", this.store.state.agents);
+        }
+
+        // Add progress
+        this.store.state.mission.overallProgress = Math.min(95, this.store.state.mission.overallProgress + 15);
+        this.store.notify("missionUpdated", this.store.state.mission);
+
+        // Render payload in War Room
+        if (payload) {
+          const prettyPayload = this.formatPayloadToHTML(payload);
+          this.store.addWarRoomMessage({
+            role: baseRole.replace("_", " "),
+            agentName: agentInfo.name,
+            content: prettyPayload,
+            timestamp: timeStr
+          });
+
+          // Special case: If PM finished, generate Kanban Tasks!
+          if (baseRole === "PROJECT_MANAGER" && payload.milestones) {
+            this.generateTasksFromPM(payload.milestones, agentInfo.name);
+          }
+        }
       }
-
-      const completedCount = tasks.filter(t => t.status === 'completed').length;
-      this.store.state.mission.completedTasksCount = 428 + completedCount * 4;
-      this.store.state.mission.pendingTasksCount = Math.max(0, 14 - completedCount);
-      this.store.notify("missionUpdated", this.store.state.mission);
-
-      if (this.store.state.mission.overallProgress >= 100 && !this.completed) {
-        this.completed = true;
-        this.completeMission();
-      }
+      return;
     }
-
-    // ── 5. Notify agents update ──
-    this.store.notify("agentsUpdated", this.store.state.agents);
   }
 
-  completeMission() {
-    console.log('[missionOS] Mission reached 100%. Finalizing...');
-    this.stopSimulation();
+  formatPayloadToHTML(payload) {
+    // Basic formatting of the JSON payload into readable HTML for the War Room
+    if (typeof payload !== 'object') return String(payload);
+    
+    let html = '<div class="ai-payload-response" style="font-size: 0.9em; margin-top: 4px;">';
+    for (const [key, value] of Object.entries(payload)) {
+      if (key === 'status') continue;
+      
+      const humanKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      html += `<div style="margin-bottom: 8px;">`;
+      html += `<strong style="color: var(--accent);">${humanKey}:</strong> `;
+      
+      if (Array.isArray(value)) {
+        html += `<ul style="margin: 4px 0 0 20px; padding: 0;">`;
+        value.forEach(item => {
+          html += `<li>${item}</li>`;
+        });
+        html += `</ul>`;
+      } else {
+        html += `<span>${value}</span>`;
+      }
+      html += `</div>`;
+    }
+    html += '</div>';
+    return html;
+  }
 
-    agentService.getAgents().forEach(a => {
-      a.status = 'Completed';
-      a.progress = 100;
-      a.estimatedCompletion = 'Completed';
+  generateTasksFromPM(milestones, pmName) {
+    let taskCount = 1;
+    milestones.forEach((ms) => {
+      const subtasks = (ms.tasks || []).map((t, idx) => ({
+        id: `sub-${Date.now()}-${idx}`,
+        title: t,
+        done: false,
+        status: 'pending'
+      }));
+
+      const newTask = {
+        id: `T-${1000 + taskCount}`,
+        title: ms.name,
+        assignedAgentId: 'agent-backend',
+        assignedAgentName: 'Titan',
+        priority: ms.priority || 'medium',
+        status: 'in_progress',
+        progress: 0,
+        subtasks: subtasks
+      };
+
+      this.store.state.tasks.unshift(newTask);
+      taskCount++;
     });
-    this.store.state.agents = [...agentService.getAgents()];
-    this.store.notify("agentsUpdated", this.store.state.agents);
 
-    (this.store.state.tasks || []).forEach(t => {
-      t.status = 'completed';
-      if (t.subtasks) t.subtasks.forEach(s => { s.done = true; s.status = 'completed'; });
-    });
-    this.store.notify("tasksUpdated", this.store.state.tasks);
-
-    this.store.state.mission.status = 'Completed';
-    this.store.state.mission.pendingTasksCount = 0;
-    this.store.notify("missionUpdated", this.store.state.mission);
-
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    this.store.addActivityLog({
-      timestamp: timeStr,
-      agentName: 'missionOS',
-      agentId: 'system',
-      severity: 'SUCCESS',
-      message: '🏆 Mission completed! All tasks verified and delivered.',
-      category: 'SYSTEM'
-    });
-
-    this.store.notify("missionCompleted", this.store.state);
+    this.store.notify('tasksUpdated', this.state?.tasks || this.store.state.tasks);
+    this.store.notify('toast', { type: 'success', text: `${pmName} generated ${milestones.length} milestones.` });
   }
 }
