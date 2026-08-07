@@ -66,10 +66,10 @@ class AuthService:
             refresh_token=refresh_token,
             token_type="bearer",
             user=UserResponse(
-                id=new_user.id,
+                id=str(new_user.id),
                 name=new_user.name,
                 email=new_user.email,
-                created_at=new_user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                created_at=new_user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(new_user.created_at, "strftime") else str(new_user.created_at),
                 last_login=None,
                 role=new_user.role,
                 avatar=new_user.avatar,
@@ -110,11 +110,11 @@ class AuthService:
             refresh_token=refresh_token,
             token_type="bearer",
             user=UserResponse(
-                id=user.id,
+                id=str(user.id),
                 name=user.name,
                 email=user.email,
-                created_at=user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                last_login=user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                created_at=user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(user.created_at, "strftime") else str(user.created_at),
+                last_login=user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if user.last_login and hasattr(user.last_login, "strftime") else (str(user.last_login) if user.last_login else None),
                 role=user.role,
                 avatar=user.avatar,
             ),
@@ -151,13 +151,13 @@ class AuthService:
             refresh_token=create_refresh_token(user_data),
             token_type="bearer",
             user=UserResponse(
-                id=user.id,
+                id=str(user.id),
                 name=user.name,
                 email=user.email,
-                created_at=user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                created_at=user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(user.created_at, "strftime") else str(user.created_at),
                 last_login=user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ")
-                if user.last_login
-                else None,
+                if user.last_login and hasattr(user.last_login, "strftime")
+                else (str(user.last_login) if user.last_login else None),
                 role=user.role,
                 avatar=user.avatar,
             ),

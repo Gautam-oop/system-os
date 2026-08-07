@@ -65,11 +65,11 @@ def get_me(current_user: User = Depends(get_current_user)):
     Retrieve authenticated user profile.
     """
     user_response = UserResponse(
-        id=current_user.id,
+        id=str(current_user.id),
         name=current_user.name,
         email=current_user.email,
-        created_at=current_user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        last_login=current_user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if current_user.last_login else None,
+        created_at=current_user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(current_user.created_at, "strftime") else str(current_user.created_at),
+        last_login=current_user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if current_user.last_login and hasattr(current_user.last_login, "strftime") else (str(current_user.last_login) if current_user.last_login else None),
         role=current_user.role,
         avatar=current_user.avatar
     )
