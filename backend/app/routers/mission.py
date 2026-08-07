@@ -4,6 +4,7 @@ MISSIONOS FASTAPI BACKEND - MISSION ROUTER
 ==========================================================================
 """
 from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Dict, Any
 from fastapi.responses import StreamingResponse
 from backend.app.models.mission import CreateMissionRequest, MissionResponse
 from backend.app.models.response import ApiResponse
