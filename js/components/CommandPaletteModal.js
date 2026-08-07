@@ -432,13 +432,13 @@ function renderActivityFeedModal(containerEl) {
             let color = '#6366f1';
             if (log.severity === 'SUCCESS') color = '#10b981';
             if (log.severity === 'WARN') color = '#f59e0b';
-            return \`
+            return `
               <div style="display: flex; gap: 0.75rem; line-height: 1.4;">
-                <span style="color: #64748b; flex-shrink: 0;">\${log.timestamp || ''}</span>
-                <span style="color: #cbd5e1; font-weight: bold; flex-shrink: 0; width: 60px;">[\${log.agentName || 'SYS'}]</span>
-                <span style="color: \${color};">\${escapeHtml(log.message)}</span>
+                <span style="color: #64748b; flex-shrink: 0;">${log.timestamp || ''}</span>
+                <span style="color: #cbd5e1; font-weight: bold; flex-shrink: 0; width: 60px;">[${log.agentName || 'SYS'}]</span>
+                <span style="color: ${color};">${escapeHtml(log.message)}</span>
               </div>
-            \`;
+            `;
           }).join('')}
         </div>
       </div>
