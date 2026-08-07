@@ -97,24 +97,24 @@ export function updateNotificationPopover() {
   const contentEl = document.getElementById('notif-popover-content');
   if (!contentEl) return;
   const state = store.getState();
-  const logs = state.activityLogs || [];
+  const allLogs = state.activityLogs || [];
+  
+  // Only show final task completion messages in the notification popup
+  const logs = allLogs.filter(log => log.severity === 'SUCCESS' || (log.message && log.message.toLowerCase().includes('completed')));
   
   if (logs.length === 0) {
-    contentEl.innerHTML = `<div style="color: #64748b; padding: 1rem; text-align: center;">No recent activity.</div>`;
+    contentEl.innerHTML = `<div style="color: #64748b; padding: 1rem; text-align: center;">No completed tasks yet.</div>`;
     return;
   }
   
   const escapeHtml = str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   
   contentEl.innerHTML = logs.map(log => {
-    let color = '#6366f1';
-    if (log.severity === 'SUCCESS') color = '#10b981';
-    if (log.severity === 'WARN') color = '#f59e0b';
     return `
-      <div style="display: flex; gap: 0.5rem; line-height: 1.4; padding: 0.5rem; border-radius: 6px; background: rgba(255,255,255,0.02);">
+      <div style="display: flex; gap: 0.5rem; line-height: 1.4; padding: 0.5rem; border-radius: 6px; background: rgba(16, 185, 129, 0.05); border-left: 2px solid #10b981;">
         <span style="color: #64748b; flex-shrink: 0;">${log.timestamp || ''}</span>
         <span style="color: #cbd5e1; font-weight: bold; flex-shrink: 0; width: 50px;">[${log.agentName || 'SYS'}]</span>
-        <span style="color: ${color};">${escapeHtml(log.message)}</span>
+        <span style="color: #10b981;">${escapeHtml(log.message)}</span>
       </div>
     `;
   }).join('');
