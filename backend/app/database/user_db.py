@@ -13,7 +13,10 @@ from sqlalchemy.orm import sessionmaker
 
 # Resolve db file path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'mission_ops_users.db')}"
+if os.environ.get("VERCEL"):
+    DATABASE_URL = "sqlite:////tmp/mission_ops_users.db"
+else:
+    DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'mission_ops_users.db')}"
 
 engine = create_engine(
     DATABASE_URL, 
