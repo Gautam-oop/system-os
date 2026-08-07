@@ -218,6 +218,50 @@ export function renderMissionReport(containerEl) {
           </div>
         </div>
 
+        <!-- ═══ Detailed Task Execution Log ═══ -->
+        <div class="report-section report-section-full">
+          <h2 class="report-section-title">
+            <div class="report-section-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            Detailed Task Execution Log
+          </h2>
+          
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            ${(report.taskDetails || []).map(t => `
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                  <div>
+                    <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem 0; line-height: 1.3;">
+                      ${t.title} 
+                      <span style="font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; font-family: var(--font-mono); margin-left: 0.5rem; letter-spacing: 0.05em;">${t.id}</span>
+                    </h3>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;">
+                      <span><strong style="color: var(--text);">Agent:</strong> ${t.agent}</span>
+                      <span><strong style="color: var(--text);">Priority:</strong> ${t.priority.toUpperCase()}</span>
+                    </div>
+                  </div>
+                  <span class="badge ${t.status === 'completed' ? 'badge-emerald' : t.status === 'ai_executing' ? 'badge-purple' : 'badge-amber'}">${t.status.toUpperCase()}</span>
+                </div>
+                
+                ${t.subtasks && t.subtasks.length > 0 ? `
+                  <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border-subtle);">
+                    <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Subtask Trace</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.5rem;">
+                      ${t.subtasks.map(s => `
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: ${s.done ? 'var(--text-secondary)' : 'var(--text-tertiary)'}; background: rgba(0,0,0,0.1); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
+                          <span style="color: ${s.done ? '#10b981' : '#64748b'}; font-weight: bold; font-size: 0.9rem;">${s.done ? '✓' : '○'}</span>
+                          ${s.title}
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
       <!-- ═══ Footer ═══ -->
       <div class="report-footer">
         <div class="report-footer-logo">

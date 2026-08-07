@@ -147,12 +147,9 @@ function initApp() {
   // ─── OPEN MODAL (from buttons that fire 'openModal') ─────────────────
 
   store.subscribe('openModal', (modalData) => {
-    if (modalData && modalData.type === 'new-task') {
-      store.activeModal = 'new-task';
-      store.notify('modalChanged', { type: 'new-task' });
-    } else if (modalData && modalData.type === 'command-palette') {
-      store.activeModal = 'command-palette';
-      store.notify('modalChanged', { type: 'command-palette' });
+    if (modalData && modalData.type) {
+      store.activeModal = modalData.type;
+      store.notify('modalChanged', modalData);
     }
   });
 
@@ -202,8 +199,7 @@ function initApp() {
 
       const notifBtn = e.target.closest('#notif-trigger');
       if (notifBtn) {
-        store.notify('toast', { type: 'info', text: 'Viewing recent activity logs' });
-        store.setActiveTab('activity');
+        store.notify('openModal', { type: 'activity-feed' });
         return;
       }
 
