@@ -467,6 +467,6 @@ function validateForm(cardHost) {
 }
 
 function validateEmailRegex(email) {
-  // Relaxed for local development so any username/email string is valid
-  return email.trim().length > 0;
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
 }

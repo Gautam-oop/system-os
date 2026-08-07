@@ -16,6 +16,9 @@ import { renderTimelineView } from './components/TimelineView.js';
 import { renderAnalyticsCards } from './components/AnalyticsCards.js';
 import { renderMissionReport } from './components/MissionReport.js';
 import { renderModalHost } from './components/CommandPaletteModal.js';
+import { renderWarRoom } from './components/WarRoom.js';
+import { renderDecisionLog } from './components/DecisionLog.js';
+import { renderApprovalModal } from './components/ApprovalModal.js';
 import { showOnboardingTutorial } from './components/OnboardingModal.js';
 import { showUserProfileModal } from './components/UserProfileModal.js';
 import { showMissionCompleteOverlay } from './components/MissionCompleteOverlay.js';
@@ -40,6 +43,8 @@ function initApp() {
     tasks: document.getElementById('view-tasks'),
     timeline: document.getElementById('view-timeline'),
     activity: document.getElementById('view-activity'),
+    warroom: document.getElementById('view-warroom'),
+    decisionlog: document.getElementById('view-decisionlog'),
     analytics: document.getElementById('view-analytics'),
     report: document.getElementById('view-report')
   };
@@ -65,6 +70,8 @@ function initApp() {
       case 'tasks':     renderTaskBoard(sectionEl); break;
       case 'timeline':  renderTimelineView(sectionEl); break;
       case 'activity':  renderActivityFeed(sectionEl); break;
+      case 'warroom':   renderWarRoom(sectionEl); break;
+      case 'decisionlog': renderDecisionLog(sectionEl); break;
       case 'analytics': renderAnalyticsCards(sectionEl); break;
       case 'report':    renderMissionReport(sectionEl); break;
     }

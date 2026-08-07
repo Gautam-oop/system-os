@@ -16,56 +16,6 @@ from backend.app.utils.jwt import create_access_token, create_refresh_token, dec
 
 class AuthService:
     
-        @staticmethod
-def login(payload: UserLoginRequest, db: Session) -> TokenResponse:
-    """
-    Authenticate a user and return access/refresh tokens.
-    """
-    user = db.query(User).filter(User.email == payload.email).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password."
-        )
-
-    if not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password."
-        )
-
-    # Update last login time
-    user.last_login = datetime.utcnow()
-    db.commit()
-    db.refresh(user)
-
-    user_data = {
-        "sub": user.email,
-        "role": user.role,
-        "name": user.name
-    }
-
-    access_token = create_access_token(user_data)
-    refresh_token = create_refresh_token(user_data)
-
-    user_response = UserResponse(
-        id=user.id,
-        name=user.name,
-        email=user.email,
-        created_at=user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        last_login=user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        role=user.role,
-        avatar=user.avatar
-    )
-
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="bearer",
-        user=user_response
-    )
-
     @staticmethod
     def login(payload: UserLoginRequest, db: Session) -> TokenResponse:
         """

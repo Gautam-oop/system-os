@@ -31,18 +31,24 @@ class MissionStore {
       tasks: [],
       timelinePhases: [],
       activityLogs: [],
+      warRoomMessages: [],
+      decisions: [],
+      pendingApproval: null,
+      typingAgent: null,
       analytics: null,
       heroStats: []
     };
 
     this.loading = {
       mission: false, employees: false, agents: false,
-      tasks: false, timeline: false, activity: false, analytics: false
+      tasks: false, timeline: false, activity: false, analytics: false,
+      warRoom: false, decisions: false
     };
 
     this.errors = {
       mission: null, employees: null, agents: null,
-      tasks: null, timeline: null, activity: null, analytics: null
+      tasks: null, timeline: null, activity: null, analytics: null,
+      warRoom: null, decisions: null
     };
 
     this.activeTab = 'overview';
@@ -180,6 +186,37 @@ class MissionStore {
     this.notify('agentsUpdated', this.state.agents);
   }
 
+  addWarRoomMessage(message) {
+    const newMsg = { id: `wrm-${Date.now()}-${Math.random().toString(36).slice(2,6)}`, ...message };
+    this.state.warRoomMessages.push(newMsg);
+    if (this.state.warRoomMessages.length > 200) { this.state.warRoomMessages.shift(); }
+    this.notify('warRoomUpdated', this.state.warRoomMessages);
+  }
+  
+  setTypingAgent(agentName) {
+    if (this.state.typingAgent !== agentName) {
+      this.state.typingAgent = agentName;
+      this.notify('typingUpdated', agentName);
+    }
+  }
+
+  addDecision(decision) {
+    const newDec = { id: `dec-${Date.now()}-${Math.random().toString(36).slice(2,6)}`, ...decision };
+    this.state.decisions.unshift(newDec);
+    this.notify('decisionsUpdated', this.state.decisions);
+  }
+
+  setPendingApproval(approvalData) {
+    this.state.pendingApproval = approvalData;
+    this.notify('approvalRequested', approvalData);
+  }
+
+  resolveApproval(decisionValue) {
+    const pending = this.state.pendingApproval;
+    this.state.pendingApproval = null;
+    this.notify('approvalResolved', { value: decisionValue, originalRequest: pending });
+  }
+
   async addNewTask(taskData) {
     const title = (taskData.title || "").trim();
 
@@ -232,30 +269,29 @@ class MissionStore {
         status: 'ai_executing',
         subtasks: taskData.subtasks || subtasks
       });
-
       // Integrate created task into state
-const taskObj = {
-  ...savedTask,
-  progress: 0,
-  objectiveId: taskData.objectiveId || null,
-  assignedAgents: [
-    {
-      name: finalAgentName,
-      task: "Planning & Execution",
-      status: "Working"
-    },
-    {
-      name: "Spectre",
-      task: "Testing",
-      status: "Pending"
-    },
-    {
-      name: "Titan",
-      task: "Backend Review",
-      status: "Pending"
-    }
-  ]
-};
+      const taskObj = {
+        ...savedTask,
+        progress: 0,
+        objectiveId: taskData.objectiveId || null,
+        assignedAgents: [
+          {
+            name: finalAgentName,
+            task: "Planning & Execution",
+            status: "Working"
+          },
+          {
+            name: "Spectre",
+            task: "Testing",
+            status: "Pending"
+          },
+          {
+            name: "Titan",
+            task: "Backend Review",
+            status: "Pending"
+          }
+        ]
+      };
       this.state.tasks.unshift(taskObj);
 
       // Update assigned agent status
@@ -277,8 +313,8 @@ const taskObj = {
       this.notify('toast', { type: 'success', text: `[${taskObj.id}] Created and assigned to ${taskObj.assignedAgentName}!` });
 
     } catch (err) {
-      console.error('[missionOS] Error creating task:', err);
-      this.notify('toast', { type: 'error', text: `Failed to create task: ${err.message}` });
+      console.error('[missionOS] Error processing task:', err);
+      this.notify('toast', { type: 'error', text: `Failed to process task: ${err.message}` });
     }
   }
 }

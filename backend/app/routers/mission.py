@@ -4,14 +4,23 @@ MISSIONOS FASTAPI BACKEND - MISSION ROUTER
 ==========================================================================
 """
 from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.responses import StreamingResponse
 from backend.app.models.mission import CreateMissionRequest, MissionResponse
 from backend.app.models.response import ApiResponse
 from backend.app.database.mock_db import db_repo
 from backend.app.middleware.auth import get_current_user
+from backend.app.orchestrator.streamer import streamer
 
-router = APIRouter(prefix="/api", tags=["Missions & Projects"], dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/api", tags=["Missions & Projects"])
 
-@router.post("/create-mission", response_model=ApiResponse[MissionResponse], status_code=status.HTTP_201_CREATED)
+@router.get("/stream")
+async def stream_mission_events():
+    """
+    Stream real-time mission execution events via SSE.
+    """
+    return StreamingResponse(streamer.subscribe(), media_type="text/event-stream")
+
+@router.post("/create-mission", response_model=ApiResponse[MissionResponse], status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
 def create_mission(payload: CreateMissionRequest):
     """
     Create a new project/mission in missionOS.
@@ -57,3 +66,29 @@ def get_default_mission():
         code=200,
         data=MissionResponse(**mission_dict)
     )
+
+@router.post("/mission/run", response_model=ApiResponse[Dict[str, Any]])
+def run_mission(payload: CreateMissionRequest):
+    """
+    Execute the entire autonomous AI workforce mission workflow.
+    """
+    from backend.app.orchestrator.engine import MissionOrchestrator
+    
+    orchestrator = MissionOrchestrator()
+    mission_data = {
+        "name": payload.name,
+        "description": payload.description,
+        "targetETA": payload.targetETA,
+        "leadDirector": payload.leadDirector
+    }
+    
+    try:
+        final_outputs = orchestrator.start_mission(mission_data)
+        return ApiResponse(
+            status="success",
+            code=200,
+            message="Mission executed successfully",
+            data=final_outputs
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Mission execution failed: {str(e)}")
