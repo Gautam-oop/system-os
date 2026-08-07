@@ -72,6 +72,33 @@ class AgentMessageCreate(BaseModel):
     mission_id: str | None = None
 
 
+@router.get("/agent-messages")
+def get_agent_messages(mission_id: Optional[str] = None):
+    db = SessionLocal()
+    try:
+        query = db.query(AgentMessage)
+        if mission_id:
+            query = query.filter(AgentMessage.mission_id == mission_id)
+        messages = query.order_by(AgentMessage.created_at.asc()).all()
+        return {
+            "status": "success",
+            "code": 200,
+            "data": [
+                {
+                    "id": str(msg.id),
+                    "sender_agent_id": msg.sender_agent_id,
+                    "sender_name": msg.sender_name,
+                    "role": msg.role,
+                    "content": msg.content,
+                    "mission_id": msg.mission_id,
+                    "created_at": msg.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(msg.created_at, "strftime") else str(msg.created_at) if msg.created_at else None,
+                }
+                for msg in messages
+            ]
+        }
+    finally:
+        db.close()
+
 @router.post("/agent-messages")
 def save_agent_message(payload: AgentMessageCreate):
     db = SessionLocal()
