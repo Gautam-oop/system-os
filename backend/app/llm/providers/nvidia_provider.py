@@ -11,7 +11,7 @@ class NVIDIAProvider(LLMProvider):
     """
     NVIDIA Build LLM Provider implementation using OpenAI compatible endpoints.
     """
-    def __init__(self, model_name: str = "meta/llama-3.1-70b-instruct"):
+    def __init__(self, model_name: str = "meta/llama-3.1-8b-instruct"):
         api_key = os.environ.get("NVIDIA_API_KEY")
         if not api_key:
             raise ValueError("NVIDIA_API_KEY environment variable is missing.")
