@@ -7,7 +7,7 @@ import { authContext } from './authContext.js';
 import { renderAuth } from './components/Auth.js';
 import { renderLanding } from './components/Landing.js';
 import { renderSidebar } from './components/Sidebar.js';
-import { renderNavbar } from './components/Navbar.js';
+import { renderNavbar, updateNotificationPopover } from './components/Navbar.js';
 import { renderMissionOverview } from './components/MissionOverview.js';
 import { renderAIWorkforce } from './components/AIWorkforce.js';
 import { renderTaskBoard } from './components/TaskBoard.js';
@@ -133,6 +133,7 @@ function initApp() {
       bellSvg.classList.add('ringing');
       setTimeout(() => bellSvg.classList.remove('ringing'), 800);
     }
+    updateNotificationPopover();
   });
 
   store.subscribe('analyticsUpdated', () => {
@@ -168,6 +169,20 @@ function initApp() {
     if (e.key === 'Escape' && store.getActiveModal()) {
       store.closeModal();
     }
+    if (e.key === 'Escape') {
+      const popover = document.getElementById('notif-popover');
+      if (popover && popover.style.display === 'block') popover.style.display = 'none';
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const popover = document.getElementById('notif-popover');
+    const notifBtn = document.getElementById('notif-trigger');
+    if (popover && popover.style.display === 'block') {
+      if (!popover.contains(e.target) && (!notifBtn || !notifBtn.contains(e.target))) {
+        popover.style.display = 'none';
+      }
+    }
   });
 
   // ─── Event Delegation for Navbar Clicks ──────────────────────────────
@@ -199,7 +214,16 @@ function initApp() {
 
       const notifBtn = e.target.closest('#notif-trigger');
       if (notifBtn) {
-        store.notify('openModal', { type: 'activity-feed' });
+        const popover = document.getElementById('notif-popover');
+        if (popover) {
+          if (popover.style.display === 'none' || popover.style.display === '') {
+            popover.style.display = 'block';
+            updateNotificationPopover();
+          } else {
+            popover.style.display = 'none';
+          }
+        }
+        e.stopPropagation();
         return;
       }
 
