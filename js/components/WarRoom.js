@@ -1,4 +1,5 @@
 import { store } from '../store.js';
+import { renderIncidentChecklist } from './IncidentChecklist.js';
 
 let isScrolledToBottom = true;
 
@@ -13,8 +14,8 @@ export function renderWarRoom(containerEl) {
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         </div>
         <div>
-          <h2 class="section-title">AI War Room</h2>
-          <p class="section-subtitle">Live collaboration channel for autonomous agents</p>
+          <h2 class="section-title">AI War Room & Incident Response</h2>
+          <p class="section-subtitle">Live collaboration channel for autonomous agents and active incident checklist</p>
         </div>
       </div>
       <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -23,7 +24,14 @@ export function renderWarRoom(containerEl) {
       </div>
     </div>
 
+    <!-- Mounted Incident Action Checklist for Active Incident -->
+    <div id="warroom-checklist-host" style="margin-top: 1rem; margin-bottom: 1.5rem;"></div>
+
     <div class="war-room-container" style="display: flex; flex-direction: column; height: calc(100vh - 200px); background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-subtle); margin-top: 1rem; overflow: hidden;">
+      <div style="padding: 0.75rem 1.25rem; background: var(--bg-primary); border-bottom: 1px solid var(--border-subtle); font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">
+        <span>💬 AI AGENT STREAM</span>
+        <span style="font-size: 0.7rem; font-weight: 400; color: var(--text-tertiary);">${messages.length} MESSAGES LOGGED</span>
+      </div>
       
       <!-- Messages Area -->
       <div id="war-room-messages" style="flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem; scroll-behavior: smooth;">
@@ -37,6 +45,12 @@ export function renderWarRoom(containerEl) {
       </div>
     </div>
   `;
+
+  // Mount the interactive Incident Checklist inside the AI War Room screen
+  const checklistHost = containerEl.querySelector('#warroom-checklist-host');
+  if (checklistHost) {
+    renderIncidentChecklist(checklistHost, 'incident_active_001');
+  }
 
   // Handle scroll sticking
   const msgsEl = containerEl.querySelector('#war-room-messages');
