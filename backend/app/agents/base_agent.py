@@ -12,7 +12,7 @@ class BaseAgent(ABC):
         self.role = role
         
     @abstractmethod
-    def execute(self, mission: str, shared_memory: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, mission: str, shared_memory: Dict[str, Any], target_file: str = None) -> Dict[str, Any]:
         """
         Execute the agent's specific responsibility.
         """

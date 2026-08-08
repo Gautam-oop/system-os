@@ -15,6 +15,9 @@ export function renderMissionOverview(containerEl, forceRender = false) {
   const progressVal = mission.overallProgress || 68;
   const completedVal = mission.completedTasksCount || 428;
   const pendingVal = mission.pendingTasksCount || 14;
+  
+  const intell = state.missionIntelligence || {};
+  const explorer = state.projectExplorer || { files: [] };
 
   // Group tasks by project
   const tasksByProject = {};
@@ -50,11 +53,41 @@ export function renderMissionOverview(containerEl, forceRender = false) {
     const statProg = containerEl.querySelector('#ostat-progress');
     if (statProg) animateCounter(statProg, progressVal, '', '%');
 
-    const statTasks = containerEl.querySelector('#ostat-tasks');
-    if (statTasks) animateCounter(statTasks, completedVal, '', '');
+    // Update Intelligence Panel
+    const currEng = containerEl.querySelector('#intell-engineer');
+    if (currEng) currEng.textContent = intell.currentEngineer || 'Waiting...';
+    
+    const currFile = containerEl.querySelector('#intell-file');
+    if (currFile) currFile.textContent = intell.currentFile || 'N/A';
+    
+    const currTask = containerEl.querySelector('#intell-task');
+    if (currTask) currTask.textContent = intell.currentTask || 'N/A';
+    
+    const remArts = containerEl.querySelector('#intell-artifacts');
+    if (remArts) remArts.textContent = intell.remainingArtifacts;
+    
+    const buildProg = containerEl.querySelector('#intell-build');
+    if (buildProg) buildProg.textContent = `${intell.buildProgress}%`;
+    
+    const valStat = containerEl.querySelector('#intell-val');
+    if (valStat) {
+       valStat.textContent = intell.validationStatus;
+       valStat.style.color = intell.validationStatus === 'Failed' ? '#ef4444' : (intell.validationStatus === 'Passed' ? '#10b981' : 'var(--text-secondary)');
+    }
+    
+    const confScore = containerEl.querySelector('#intell-conf');
+    if (confScore) confScore.textContent = `${intell.confidenceScore}%`;
 
-    const statPending = containerEl.querySelector('#ostat-pending');
-    if (statPending) animateCounter(statPending, pendingVal, '', '');
+    // Update Project Explorer
+    const explorerBody = containerEl.querySelector('#os-explorer-body');
+    if (explorerBody) {
+        explorerBody.innerHTML = explorer.files.length > 0 ? explorer.files.map(f => `
+            <div style="padding: 4px 8px; font-size: 0.75rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                ${f}
+            </div>
+        `).join('') : '<div style="padding: 8px; color: var(--text-tertiary); font-size: 0.8rem; font-style: italic;">Workspace empty</div>';
+    }
 
     // Update Project Tiles in place
     displayObjectives.forEach(obj => {
@@ -254,12 +287,58 @@ export function renderMissionOverview(containerEl, forceRender = false) {
           </div>
         </div>
 
-        <!-- Flowing Secondary metrics (No card grid) -->
-        <div style="display: flex; justify-content: space-between; padding: 1.25rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border);">
-          <span>PROGRESS: <strong id="ostat-progress" style="color: var(--accent);">${progressVal}%</strong></span>
-          <span>TASKS DONE: <strong id="ostat-tasks">${completedVal}</strong></span>
-          <span>QUEUE: <strong id="ostat-pending">${pendingVal}</strong></span>
+        <!-- Live Mission Intelligence Panel -->
+        <div class="glass-panel no-hover">
+            <div class="stage-title-row" style="margin-bottom: 10px;">
+                <h2 class="stage-heading" style="font-size: 0.9rem;">Live Mission Intelligence</h2>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.75rem; font-family: var(--font-mono);">
+                <div style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">CURRENT ENGINEER</div>
+                    <div id="intell-engineer" style="font-weight: 600; color: var(--accent);">${intell.currentEngineer || 'Waiting...'}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">CURRENT FILE</div>
+                    <div id="intell-file" style="font-weight: 600;">${intell.currentFile || 'N/A'}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px; grid-column: span 2;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">CURRENT TASK</div>
+                    <div id="intell-task" style="font-weight: 600; color: #10b981;">${intell.currentTask || 'N/A'}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">REMAINING ARTIFACTS</div>
+                    <div id="intell-artifacts" style="font-weight: 600;">${intell.remainingArtifacts}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">BUILD PROGRESS</div>
+                    <div id="intell-build" style="font-weight: 600;">${intell.buildProgress}%</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">VALIDATION</div>
+                    <div id="intell-val" style="font-weight: 600;">${intell.validationStatus}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">CONFIDENCE</div>
+                    <div id="intell-conf" style="font-weight: 600;">${intell.confidenceScore}%</div>
+                </div>
+            </div>
         </div>
+        
+        <!-- Project Explorer -->
+        <div class="glass-panel no-hover" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="stage-title-row" style="margin-bottom: 10px;">
+                <h2 class="stage-heading" style="font-size: 0.9rem;">Project Explorer</h2>
+            </div>
+            <div id="os-explorer-body" style="flex: 1; overflow-y: auto; max-height: 200px; font-family: var(--font-mono);">
+                ${explorer.files.length > 0 ? explorer.files.map(f => `
+                    <div style="padding: 4px 8px; font-size: 0.75rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                        ${f}
+                    </div>
+                `).join('') : '<div style="padding: 8px; color: var(--text-tertiary); font-size: 0.8rem; font-style: italic;">Workspace empty</div>'}
+            </div>
+        </div>
+
       </div>
 
     </div>
