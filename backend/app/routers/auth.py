@@ -21,25 +21,41 @@ from backend.app.middleware.auth import get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
-@router.post("/signup", response_model=ApiResponse[TokenResponse], status_code=status.HTTP_201_CREATED)
+@router.post("/signup")
 def signup(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     """
     Register a new user account.
     """
     try:
         token_response = AuthService.signup(payload, db)
-        return ApiResponse(
-            status="success",
-            code=201,
-            message="Account created successfully",
-            data=token_response
-        )
+        return {
+            "status": "success",
+            "code": 201,
+            "message": "Account created successfully",
+            "data": {
+                "access_token": token_response.access_token,
+                "refresh_token": token_response.refresh_token,
+                "token_type": token_response.token_type,
+                "user": {
+                    "id": token_response.user.id,
+                    "name": token_response.user.name,
+                    "email": token_response.user.email,
+                    "created_at": token_response.user.created_at,
+                    "last_login": token_response.user.last_login,
+                    "role": token_response.user.role,
+                    "avatar": token_response.user.avatar,
+                    "is_active": token_response.user.is_active
+                }
+            }
+        }
     except Exception as e:
         import traceback
-        raise HTTPException(
-            status_code=400,
-            detail=f"Signup failed: {str(e)} | Traceback: {traceback.format_exc()}"
-        )
+        return {
+            "status": "error",
+            "code": 400,
+            "message": f"Signup failed: {str(e)}",
+            "detail": traceback.format_exc()
+        }
 
 @router.post("/login", response_model=ApiResponse[TokenResponse])
 def login(payload: UserLoginRequest, db: Session = Depends(get_db)):
