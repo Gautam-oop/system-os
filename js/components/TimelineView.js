@@ -2,8 +2,8 @@
    TIMELINE (ENGINEERING ROADMAP GANTT) COMPONENT - ANIMATED
    ========================================================================== */
 
-import { store } from '../store.js?v=29';
-import { animateProgressBar } from '../animations.js?v=29';
+import { store } from '../store.js';
+import { animateProgressBar } from '../animations.js';
 
 export function renderTimelineView(containerEl) {
   const state = store.getState();

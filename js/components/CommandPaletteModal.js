@@ -2,7 +2,7 @@
    COMMAND PALETTE & NEW TASK MODAL CONTROLLER (APPLE SPOTLIGHT STYLE)
    ========================================================================== */
 
-import { store } from '../store.js?v=29';
+import { store } from '../store.js';
 
 export function renderModalHost(containerEl) {
   const activeModal = store.getActiveModal();

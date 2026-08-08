@@ -2,34 +2,36 @@
    MISSIONOS - MAIN ROUTER & REACTIVE APPLICATION BOOTSTRAPPER
    ========================================================================== */
 
-import { store } from './store.js?v=29';
-import { authContext } from './authContext.js?v=29';
-import { renderAuth } from './components/Auth.js?v=29';
-import { renderLanding } from './components/Landing.js?v=29';
-import { renderSidebar } from './components/Sidebar.js?v=29';
-import { renderNavbar, updateNotificationPopover } from './components/Navbar.js?v=29';
-import { renderMissionOverview } from './components/MissionOverview.js?v=29';
-import { renderAIWorkforce } from './components/AIWorkforce.js?v=29';
-import { renderTaskBoard } from './components/TaskBoard.js?v=29';
-import { renderIncidentsView } from './components/IncidentsView.js?v=29';
-import { renderActivityFeed } from './components/ActivityFeed.js?v=29';
-import { renderTimelineView } from './components/TimelineView.js?v=29';
-import { renderAnalyticsCards } from './components/AnalyticsCards.js?v=29';
-import { renderMissionReport } from './components/MissionReport.js?v=29';
-import { renderModalHost } from './components/CommandPaletteModal.js?v=29';
-import { renderWarRoom } from './components/WarRoom.js?v=29';
-import { renderDecisionLog } from './components/DecisionLog.js?v=29';
-import { renderApprovalModal } from './components/ApprovalModal.js?v=29';
-import { showOnboardingTutorial } from './components/OnboardingModal.js?v=29';
-import { showUserProfileModal } from './components/UserProfileModal.js?v=29';
-import { showMissionCompleteOverlay } from './components/MissionCompleteOverlay.js?v=29';
+import { store } from './store.js';
+import { authContext } from './authContext.js';
+import { renderAuth } from './components/Auth.js';
+import { renderLanding } from './components/Landing.js';
+import { renderSidebar } from './components/Sidebar.js';
+import { renderNavbar, updateNotificationPopover } from './components/Navbar.js';
+import { renderMissionOverview } from './components/MissionOverview.js';
+import { renderAIWorkforce } from './components/AIWorkforce.js';
+import { renderTaskBoard } from './components/TaskBoard.js';
+import { renderActivityFeed } from './components/ActivityFeed.js';
+import { renderTimelineView } from './components/TimelineView.js';
+import { renderAnalyticsCards } from './components/AnalyticsCards.js';
+import { renderMissionReport } from './components/MissionReport.js';
+import { renderModalHost } from './components/CommandPaletteModal.js';
+import { renderWarRoom } from './components/WarRoom.js';
+import { renderDecisionLog } from './components/DecisionLog.js';
+import { renderIncidentChecklist } from './components/IncidentChecklist.js';
+import { renderApprovalModal } from './components/ApprovalModal.js';
+import { showOnboardingTutorial } from './components/OnboardingModal.js';
+import { showUserProfileModal } from './components/UserProfileModal.js';
+import { showMissionCompleteOverlay } from './components/MissionCompleteOverlay.js';
+import { renderAdminUsers } from './components/AdminUsers.js';
 import {
   animatePageTransition,
   animateStaggeredEntrance,
   animateModalOpen,
   animateModalClose,
   animateToast
-} from './animations.js?v=29';
+} from './animations.js';
+import { mountAIDevPanel } from './components/AIDevPanel.js';
 
 function initApp() {
   console.log('[missionOS] initApp() starting...');
@@ -41,14 +43,15 @@ function initApp() {
   const views = {
     overview: document.getElementById('view-overview'),
     agents: document.getElementById('view-agents'),
-    incidents: document.getElementById('view-incidents'),
     tasks: document.getElementById('view-tasks'),
     timeline: document.getElementById('view-timeline'),
     activity: document.getElementById('view-activity'),
     warroom: document.getElementById('view-warroom'),
     decisionlog: document.getElementById('view-decisionlog'),
     analytics: document.getElementById('view-analytics'),
-    report: document.getElementById('view-report')
+    report: document.getElementById('view-report'),
+    'admin-users': document.getElementById('view-admin-users'),
+    checklist: document.getElementById('view-checklist')
   };
 
   function switchView(activeTabId) {
@@ -69,7 +72,6 @@ function initApp() {
     switch (tabId) {
       case 'overview':  renderMissionOverview(sectionEl); break;
       case 'agents':    renderAIWorkforce(sectionEl); break;
-      case 'incidents': renderIncidentsView(sectionEl); break;
       case 'tasks':     renderTaskBoard(sectionEl); break;
       case 'timeline':  renderTimelineView(sectionEl); break;
       case 'activity':  renderActivityFeed(sectionEl); break;
@@ -77,6 +79,8 @@ function initApp() {
       case 'decisionlog': renderDecisionLog(sectionEl); break;
       case 'analytics': renderAnalyticsCards(sectionEl); break;
       case 'report':    renderMissionReport(sectionEl); break;
+      case 'admin-users': renderAdminUsers(sectionEl); break;
+      case 'checklist': renderIncidentChecklist(sectionEl); break;
     }
     setTimeout(() => {
       const cards = sectionEl.querySelectorAll('.glass-panel, .kanban-task-card, .feed-item, .objective-item');
@@ -148,11 +152,6 @@ function initApp() {
     if (tab === 'overview' && views.overview) renderMissionOverview(views.overview, true);
   });
 
-  store.subscribe('incidentsUpdated', () => {
-    const tab = store.getActiveTab();
-    if (tab === 'incidents' && views.incidents) renderIncidentsView(views.incidents);
-  });
-
   store.subscribe('activityLogsUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'activity' && views.activity) renderActivityFeed(views.activity);
@@ -169,6 +168,13 @@ function initApp() {
   store.subscribe('analyticsUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'analytics' && views.analytics) renderAnalyticsCards(views.analytics);
+  });
+
+  store.subscribe('checklistUpdated', () => {
+    const tab = store.getActiveTab();
+    if (tab === 'checklist' && views.checklist) renderIncidentChecklist(views.checklist);
+    if (tab === 'warroom' && views.warroom) renderWarRoom(views.warroom);
+    if (tab === 'overview' && views.overview) renderMissionOverview(views.overview);
   });
 
   store.subscribe('toast', (toastData) => {
@@ -213,18 +219,6 @@ function initApp() {
         popover.style.display = 'none';
       }
     }
-
-    // Handle Profile Popover clicks outside
-    const profilePopover = document.getElementById('profile-popover');
-    const profileBtn = document.getElementById('navbar-profile-trigger');
-    if (profilePopover && profilePopover.style.display === 'block') {
-      if (!profilePopover.contains(e.target) && (!profileBtn || !profileBtn.contains(e.target))) {
-        profilePopover.style.display = 'none';
-        store.state.isProfilePopoverOpen = false;
-        const submenu = document.getElementById('demo-account-submenu');
-        if (submenu) submenu.style.display = 'none';
-      }
-    }
   });
 
   // ─── Event Delegation for Navbar Clicks ──────────────────────────────
@@ -232,55 +226,7 @@ function initApp() {
     navbarEl.addEventListener('click', (e) => {
       const profileBtn = e.target.closest('#navbar-profile-trigger');
       if (profileBtn) {
-        const popover = document.getElementById('profile-popover');
-        if (popover) {
-          const isVisible = popover.style.display === 'block';
-          popover.style.display = isVisible ? 'none' : 'block';
-          store.state.isProfilePopoverOpen = !isVisible;
-          
-          if (isVisible) {
-            const submenu = document.getElementById('demo-account-submenu');
-            if (submenu) submenu.style.display = 'none';
-          }
-        }
-        return;
-      }
-      
-      const menuMyProfile = e.target.closest('#menu-my-profile');
-      if (menuMyProfile) {
-        document.getElementById('profile-popover').style.display = 'none';
-        store.state.isProfilePopoverOpen = false;
         showUserProfileModal('profile');
-        return;
-      }
-
-      const menuSettings = e.target.closest('#menu-settings');
-      if (menuSettings) {
-        document.getElementById('profile-popover').style.display = 'none';
-        store.state.isProfilePopoverOpen = false;
-        showUserProfileModal('settings');
-        return;
-      }
-
-      const menuSwitchDemo = e.target.closest('#menu-switch-demo');
-      if (menuSwitchDemo) {
-        const submenu = document.getElementById('demo-account-submenu');
-        if (submenu) submenu.style.display = submenu.style.display === 'flex' ? 'none' : 'flex';
-        return;
-      }
-
-      const demoRoleItem = e.target.closest('.demo-role-item');
-      if (demoRoleItem) {
-        const role = demoRoleItem.getAttribute('data-role');
-        document.getElementById('profile-popover').style.display = 'none';
-        store.state.isProfilePopoverOpen = false;
-        authContext.setDemoMode(true, role);
-        return;
-      }
-
-      const menuLogout = e.target.closest('#menu-logout');
-      if (menuLogout) {
-        authContext.logout();
         return;
       }
 
@@ -344,6 +290,9 @@ function initApp() {
     console.log('[missionOS] Subscriptions wired. Calling store.boot()...');
     store.boot();
 
+    // Mount Level 1 AI dev panel (developer testing tool)
+    mountAIDevPanel();
+
     // Trigger onboarding tutorial for new users or when requested
     setTimeout(() => {
       showOnboardingTutorial(false);
@@ -391,22 +340,6 @@ function initApp() {
 
   // Listen to auth changes
   authContext.subscribe((event, data) => {
-    if (event === 'demo_mode_changed') {
-      // Refresh the entire view to simulate backend role change
-      if (navbarEl) renderNavbar(navbarEl);
-      if (sidebarEl) renderSidebar(sidebarEl);
-      switchView(store.getActiveTab());
-      
-      // Additional targeted refreshes
-      if (store.getActiveTab() === 'incidents') {
-        const trueUser = typeof authContext.getTrueUser === 'function' ? authContext.getTrueUser() : authContext.user;
-        const trueUserRole = trueUser?.role || 'User';
-        const targetRole = authContext.isDemoModeActive ? authContext.demoRole : trueUserRole.charAt(0).toUpperCase() + trueUserRole.slice(1).toLowerCase();
-        store.updateIncidentFilters({ role: targetRole });
-      }
-      return;
-    }
-
     if (event === 'auth_state_changed') {
       if (data && data.authenticated) {
         if (authContainerEl.style.display !== 'none' || landingContainerEl.style.display !== 'none') {

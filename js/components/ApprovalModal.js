@@ -1,4 +1,4 @@
-import { store } from '../store.js?v=29';
+import { store } from '../store.js';
 
 export function renderApprovalModal(containerEl) {
   const state = store.getState();

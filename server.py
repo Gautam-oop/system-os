@@ -11,9 +11,29 @@ import json
 import re
 import os
 import time
+import uuid
 
 PORT = 8080
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+
+# --------------------------------------------------------------------------
+# MOCK AUTH STORE (in-memory users + sessions)
+# --------------------------------------------------------------------------
+
+AUTH_USERS = {
+    "admin@missionops.dev": {
+        "id": "usr_admin_001",
+        "name": "Eleanor Vance",
+        "email": "admin@missionops.dev",
+        "password": "password123",
+        "role": "admin",
+        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
+        "created_at": "2026-08-01T06:00:00Z",
+        "last_login": None
+    }
+}
+AUTH_TOKENS = {}  # token -> email mapping
+
 
 # --------------------------------------------------------------------------
 # IN-MEMORY BACKEND DATABASE (SOFTWARE TEAM WORKFORCE SCHEMAS)
@@ -426,7 +446,54 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = self.path.split('?')[0]
         norm = path.replace('/api/v1', '/api')
 
-        if norm == '/api/mission' or norm.startswith('/api/mission/'):
+        if norm == '/api/auth/me':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            if not email:
+                body = json.dumps({"detail": "Unauthorized"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            
+            from backend.app.database.user_db import SessionLocal, User
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.email == email).first()
+                if not user:
+                    user = User(id="temp_usr", email=email, name="MissionOps User", role="admin", is_active=True)
+                
+                if not user.is_active:
+                    err = json.dumps({"detail": "Your account has been disabled."}).encode('utf-8')
+                    self.send_response(403)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                self.send_json({
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role,
+                    "avatar": user.avatar,
+                    "created_at": user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(user.created_at, "strftime") else str(user.created_at),
+                    "last_login": user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if user.last_login and hasattr(user.last_login, "strftime") else (str(user.last_login) if user.last_login else None),
+                    "is_active": user.is_active
+                })
+            except Exception as e:
+                err = json.dumps({"detail": str(e)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+            finally:
+                db.close()
+        elif norm == '/api/mission' or norm.startswith('/api/mission/'):
             self.send_json(DB["mission"])
         elif norm == '/api/employees':
             self.send_json(DB["employees"])
@@ -440,6 +507,103 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(DB["activityLogs"])
         elif norm == '/api/analytics':
             self.send_json(DB["analytics"])
+        elif norm == '/api/admin/users/stats':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            
+            from backend.app.database.user_db import SessionLocal, User
+            db = SessionLocal()
+            try:
+                current_user = db.query(User).filter(User.email == email).first()
+                if not current_user or current_user.role != 'admin':
+                    err = json.dumps({"detail": "Forbidden: Admin access required."}).encode('utf-8')
+                    self.send_response(403)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                total = db.query(User).count()
+                active = db.query(User).filter(User.is_active == True).count()
+                inactive = db.query(User).filter(User.is_active == False).count()
+                admins = db.query(User).filter(User.role == "admin").count()
+                
+                self.send_json({
+                    "total_users": total,
+                    "active_users": active,
+                    "inactive_users": inactive,
+                    "admin_count": admins
+                })
+            except Exception as e:
+                err = json.dumps({"detail": str(e)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+            finally:
+                db.close()
+        elif norm == '/api/admin/users':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            
+            from backend.app.database.user_db import SessionLocal, User
+            db = SessionLocal()
+            try:
+                current_user = db.query(User).filter(User.email == email).first()
+                if not current_user or current_user.role != 'admin':
+                    err = json.dumps({"detail": "Forbidden: Admin access required."}).encode('utf-8')
+                    self.send_response(403)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                from urllib.parse import urlparse, parse_qs
+                parsed_url = urlparse(self.path)
+                params = parse_qs(parsed_url.query)
+                
+                search = params.get('search', [None])[0]
+                role = params.get('role', [None])[0]
+                status_filter = params.get('status', [None])[0]
+                
+                query = db.query(User)
+                if search:
+                    search_term = f"%{search}%"
+                    query = query.filter(User.name.like(search_term) | User.email.like(search_term))
+                if role:
+                    query = query.filter(User.role == role)
+                if status_filter:
+                    if status_filter.lower() == "active":
+                        query = query.filter(User.is_active == True)
+                    elif status_filter.lower() == "disabled":
+                        query = query.filter(User.is_active == False)
+                
+                users = query.all()
+                users_list = []
+                for u in users:
+                    users_list.append({
+                        "id": u.id,
+                        "name": u.name,
+                        "email": u.email,
+                        "created_at": u.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(u.created_at, "strftime") else str(u.created_at),
+                        "last_login": u.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if u.last_login and hasattr(u.last_login, "strftime") else (str(u.last_login) if u.last_login else None),
+                        "role": u.role,
+                        "avatar": u.avatar,
+                        "is_active": u.is_active
+                    })
+                self.send_json(users_list)
+            except Exception as e:
+                err = json.dumps({"detail": str(e)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+            finally:
+                db.close()
         else:
             super().do_GET()
 
@@ -451,7 +615,220 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = self.path.split('?')[0]
         norm = path.replace('/api/v1', '/api')
 
-        if norm == '/api/tasks':
+        if norm == '/api/auth/login':
+            email = body.get('email', '').strip().lower()
+            password = body.get('password', '')
+            
+            from backend.app.database.user_db import SessionLocal, User
+            from backend.app.utils.password import verify_password, hash_password
+            from datetime import datetime
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.email == email).first()
+                
+                if user and not user.is_active:
+                    err = json.dumps({"detail": "Your account has been disabled. Please contact the administrator."}).encode('utf-8')
+                    self.send_response(403)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+
+                if not user:
+                    # Auto-register prototype convenience
+                    name_prefix = email.split('@')[0].capitalize()
+                    user = User(
+                        id=f"usr_{uuid.uuid4().hex[:12]}",
+                        name=f"{name_prefix} (Prototype)",
+                        email=email,
+                        hashed_password=hash_password(password),
+                        created_at=datetime.utcnow(),
+                        last_login=None,
+                        role="user",
+                        avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+                        is_active=True
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                else:
+                    # Update password if changed (prototype convenience)
+                    user.hashed_password = hash_password(password)
+                
+                user.last_login = datetime.utcnow()
+                db.commit()
+                db.refresh(user)
+                
+                token = 'mock_' + str(uuid.uuid4()).replace('-', '')
+                refresh = 'refresh_' + str(uuid.uuid4()).replace('-', '')
+                AUTH_TOKENS[token] = email
+                AUTH_TOKENS[refresh] = email
+                
+                # Update in-memory dict so other legacy endpoints work if needed
+                AUTH_USERS[email] = {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role,
+                    "avatar": user.avatar,
+                    "created_at": user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "last_login": user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if user.last_login else None,
+                    "is_active": user.is_active
+                }
+                
+                self.send_json({
+                    "access_token": token,
+                    "refresh_token": refresh,
+                    "token_type": "bearer",
+                    "user": AUTH_USERS[email]
+                })
+            except Exception as e:
+                err = json.dumps({"detail": str(e)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+            finally:
+                db.close()
+
+        elif norm == '/api/auth/signup':
+            email = body.get('email', '').strip().lower()
+            password = body.get('password', '')
+            name = body.get('name', 'New User')
+            
+            from backend.app.database.user_db import SessionLocal, User
+            from backend.app.utils.password import hash_password
+            from datetime import datetime
+            db = SessionLocal()
+            try:
+                existing_user = db.query(User).filter(User.email == email).first()
+                if existing_user:
+                    err = json.dumps({"detail": "An account with this email address already exists."}).encode('utf-8')
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                new_user = User(
+                    id=f"usr_{uuid.uuid4().hex[:12]}",
+                    name=name,
+                    email=email,
+                    hashed_password=hash_password(password),
+                    created_at=datetime.utcnow(),
+                    last_login=datetime.utcnow(),
+                    role="user",
+                    avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+                    is_active=True
+                )
+                db.add(new_user)
+                db.commit()
+                db.refresh(new_user)
+                
+                token = 'mock_' + str(uuid.uuid4()).replace('-', '')
+                refresh = 'refresh_' + str(uuid.uuid4()).replace('-', '')
+                AUTH_TOKENS[token] = email
+                AUTH_TOKENS[refresh] = email
+                
+                user_data = {
+                    "id": new_user.id,
+                    "name": new_user.name,
+                    "email": new_user.email,
+                    "role": new_user.role,
+                    "avatar": new_user.avatar,
+                    "created_at": new_user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "last_login": new_user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if new_user.last_login else None,
+                    "is_active": new_user.is_active
+                }
+                
+                # Sync in-memory AUTH_USERS
+                AUTH_USERS[email] = user_data
+                
+                self.send_json({
+                    "access_token": token,
+                    "refresh_token": refresh,
+                    "token_type": "bearer",
+                    "user": user_data
+                }, code=201)
+            except Exception as e:
+                err = json.dumps({"detail": str(e)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+            finally:
+                db.close()
+
+        elif norm == '/api/auth/logout':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            AUTH_TOKENS.pop(token, None)
+            self.send_json({"message": "Logged out successfully"})
+
+        elif norm == '/api/auth/refresh':
+            refresh = body.get('refresh_token', '')
+            email = AUTH_TOKENS.get(refresh)
+            
+            from backend.app.database.user_db import SessionLocal, User
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.email == email).first()
+                if not user:
+                    err = json.dumps({"detail": "User account no longer exists."}).encode('utf-8')
+                    self.send_response(401)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                if not user.is_active:
+                    err = json.dumps({"detail": "Your account has been disabled."}).encode('utf-8')
+                    self.send_response(403)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                new_token = 'mock_' + str(uuid.uuid4()).replace('-', '')
+                new_refresh = 'refresh_' + str(uuid.uuid4()).replace('-', '')
+                
+                AUTH_TOKENS.pop(refresh, None)
+                AUTH_TOKENS[new_token] = email
+                AUTH_TOKENS[new_refresh] = email
+                
+                user_data = {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role,
+                    "avatar": user.avatar,
+                    "created_at": user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "last_login": user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if user.last_login else None,
+                    "is_active": user.is_active
+                }
+                
+                self.send_json({
+                    "access_token": new_token,
+                    "refresh_token": new_refresh,
+                    "token_type": "bearer",
+                    "user": user_data
+                })
+            except Exception as e:
+                err = json.dumps({"detail": str(e)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+            finally:
+                db.close()
+
+        elif norm == '/api/tasks':
             new_id = f"TSK-{len(DB['tasks']) + 101}"
             new_task = {
                 "id": new_id,
@@ -469,6 +846,103 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif norm == '/api/mission/defcon':
             DB["mission"]["status"] = "Sprint 14 Active"
             self.send_json(DB["mission"])
+        elif norm == '/api/ai/test':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            if not email or email not in AUTH_USERS:
+                err = json.dumps({"detail": "Unauthorized"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            prompt = body.get('prompt', '').strip()
+            if not prompt:
+                err = json.dumps({"detail": "Prompt must not be empty"}).encode('utf-8')
+                self.send_response(422)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            try:
+                from backend.app.services.groq_service import GroqService
+                result = GroqService.chat(
+                    system_prompt="You are MissionOps AI, an expert AI assistant integrated into the MissionOps workforce operating system. Provide clear, professional, and concise responses. Do not expose internal implementation details.",
+                    user_prompt=prompt,
+                )
+                response_bytes = json.dumps({
+                    "success": True,
+                    "response": result,
+                    "model": GroqService._get_model()
+                }).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(response_bytes)))
+                self.end_headers()
+                self.wfile.write(response_bytes)
+            except Exception as exc:
+                err = json.dumps({"detail": str(exc)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+
+        elif norm == '/api/ai/task':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            if not email or email not in AUTH_USERS:
+                err = json.dumps({"detail": "Unauthorized"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            task = body.get('task', '').strip()
+            role = body.get('role', '').strip()
+            if not task or not role:
+                err = json.dumps({"detail": "Task and role must not be empty"}).encode('utf-8')
+                self.send_response(422)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            try:
+                from backend.app.services.groq_service import GroqService
+                from backend.app.routers.ai import _build_role_system_prompt
+                system_prompt = _build_role_system_prompt(role)
+                result = GroqService.chat(
+                    system_prompt=system_prompt,
+                    user_prompt=task,
+                )
+                response_bytes = json.dumps({
+                    "success": True,
+                    "role": role,
+                    "task": task,
+                    "result": result,
+                    "model": GroqService._get_model()
+                }).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(response_bytes)))
+                self.end_headers()
+                self.wfile.write(response_bytes)
+            except Exception as exc:
+                err = json.dumps({"detail": str(exc)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+
         else:
             self.send_error(404, "Endpoint not found")
 
@@ -505,9 +979,66 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(404, "Agent not found")
                 return
 
+        match_admin_status = re.match(r'^/api/admin/users/([^/]+)/status$', norm)
+        if match_admin_status:
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            
+            from backend.app.database.user_db import SessionLocal, User
+            db = SessionLocal()
+            try:
+                current_user = db.query(User).filter(User.email == email).first()
+                if not current_user or current_user.role != 'admin':
+                    err = json.dumps({"detail": "Forbidden: Admin access required."}).encode('utf-8')
+                    self.send_response(403)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                user_id = match_admin_status.group(1)
+                user = db.query(User).filter(User.id == user_id).first()
+                if not user:
+                    err = json.dumps({"detail": "User not found"}).encode('utf-8')
+                    self.send_response(404)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err)))
+                    self.end_headers()
+                    self.wfile.write(err)
+                    return
+                
+                is_active = body.get('is_active', True)
+                user.is_active = is_active
+                db.commit()
+                db.refresh(user)
+                
+                self.send_json({
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "created_at": user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if hasattr(user.created_at, "strftime") else str(user.created_at),
+                    "last_login": user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if user.last_login and hasattr(user.last_login, "strftime") else (str(user.last_login) if user.last_login else None),
+                    "role": user.role,
+                    "avatar": user.avatar,
+                    "is_active": user.is_active
+                })
+            except Exception as e:
+                err = json.dumps({"detail": str(e)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+            finally:
+                db.close()
+            return
+
         self.send_error(404, "Endpoint not found")
 
 def run():
+    from backend.app.database.user_db import init_db
+    init_db()
     print(f"[*] Starting MissionOps SaaS Backend Server on http://localhost:{PORT}")
     with socketserver.TCPServer(("", PORT), MissionOpsRequestHandler) as httpd:
         httpd.serve_forever()

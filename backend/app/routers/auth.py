@@ -26,26 +26,40 @@ def signup(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     """
     Register a new user account.
     """
-    token_response = AuthService.signup(payload, db)
-    return ApiResponse(
-        status="success",
-        code=201,
-        message="Account created successfully",
-        data=token_response
-    )
+    try:
+        token_response = AuthService.signup(payload, db)
+        return ApiResponse(
+            status="success",
+            code=201,
+            message="Account created successfully",
+            data=token_response
+        )
+    except Exception as e:
+        import traceback
+        raise HTTPException(
+            status_code=400,
+            detail=f"Signup failed: {str(e)} | Traceback: {traceback.format_exc()}"
+        )
 
 @router.post("/login", response_model=ApiResponse[TokenResponse])
 def login(payload: UserLoginRequest, db: Session = Depends(get_db)):
     """
     Authenticate user and return a token payload.
     """
-    token_response = AuthService.login(payload, db)
-    return ApiResponse(
-        status="success",
-        code=200,
-        message="Login successful",
-        data=token_response
-    )
+    try:
+        token_response = AuthService.login(payload, db)
+        return ApiResponse(
+            status="success",
+            code=200,
+            message="Login successful",
+            data=token_response
+        )
+    except Exception as e:
+        import traceback
+        raise HTTPException(
+            status_code=400,
+            detail=f"Login failed: {str(e)} | Traceback: {traceback.format_exc()}"
+        )
 
 @router.post("/logout", response_model=ApiResponse[str])
 def logout(current_user: User = Depends(get_current_user)):

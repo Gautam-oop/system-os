@@ -2,7 +2,7 @@
    ACTIVITY FEED COMPONENT (MESSAGES-STYLE CONVERSATION STREAM)
    ========================================================================== */
 
-import { store } from '../store.js?v=29';
+import { store } from '../store.js';
 
 let activeSeverityFilter = 'ALL';
 

@@ -2,7 +2,7 @@
    MISSIONOS - AUTHENTICATION SCREEN COMPONENT
    ========================================================================== */
 
-import { authContext } from '../authContext.js?v=29';
+import { authContext } from '../authContext.js';
 
 let activeView = 'login'; // 'login', 'signup', 'forgot_password'
 let loading = false;

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.app.config import settings
-from backend.app.routers import mission, task, workforce, extra, auth
+from backend.app.routers import mission, task, workforce, extra, auth, ai, admin
 from backend.app.database.user_db import init_db
 
 # Initialize User SQLite database (creates tables, seeds default user)
@@ -40,6 +40,8 @@ app.include_router(mission.router)
 app.include_router(task.router)
 app.include_router(workforce.router)
 app.include_router(extra.router)
+app.include_router(ai.router)  # Level 1: First Real AI Connection
+app.include_router(admin.router)
 
 # Mount Static Web App Frontend
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

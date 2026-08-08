@@ -26,6 +26,7 @@ class UserResponse(BaseModel):
     last_login: Optional[str] = Field(None, example="2026-08-05T22:15:00Z")
     role: str = Field(default="user", example="user")
     avatar: Optional[str] = Field(None, example="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150")
+    is_active: bool = Field(default=True, example=True)
 
     class Config:
         from_attributes = True

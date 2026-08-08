@@ -155,6 +155,37 @@ class ApiService {
     const json = await res.json();
     return json.data;
   }
+
+  async adminFetchUsers(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.role) params.append('role', filters.role);
+    if (filters.status) params.append('status', filters.status);
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await this.request(`${API_BASE_URL}/admin/users${queryString}`);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  }
+
+  async adminFetchStats() {
+    const res = await this.request(`${API_BASE_URL}/admin/users/stats`);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  }
+
+  async adminToggleUserStatus(userId, isActive) {
+    const res = await this.request(`${API_BASE_URL}/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: isActive })
+    });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  }
 }
 
 export const apiService = new ApiService();

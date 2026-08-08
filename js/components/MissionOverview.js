@@ -2,8 +2,9 @@
    MISSION OVERVIEW COMPONENT (GRAND CENTERPIECE VIEW)
    ========================================================================== */
 
-import { store } from '../store.js?v=29';
-import { animateCounter, animateProgressBar } from '../animations.js?v=29';
+import { store } from '../store.js';
+import { incidentChecklistService } from '../services/IncidentChecklistService.js';
+import { animateCounter, animateProgressBar } from '../animations.js';
 
 export function renderMissionOverview(containerEl, forceRender = false) {
   const state = store.getState();
@@ -18,6 +19,10 @@ export function renderMissionOverview(containerEl, forceRender = false) {
   
   const intell = state.missionIntelligence || {};
   const explorer = state.projectExplorer || { files: [] };
+
+  const activeIncident = incidentChecklistService.getIncident('incident_active_001');
+  const incProgress = incidentChecklistService.getProgress('incident_active_001');
+  const incRec = incidentChecklistService.getRecommendedNextAction('incident_active_001');
 
   // Group tasks by project
   const tasksByProject = {};
@@ -177,6 +182,27 @@ export function renderMissionOverview(containerEl, forceRender = false) {
 
     <!-- Immersive Desktop Container -->
     <div class="os-centerpiece-container">
+
+      <!-- Active Incident Operational Response Card -->
+      <div class="glass-panel no-hover" style="margin-bottom: 1.5rem; padding: 1.25rem; border-left: 4px solid var(--rose); background: rgba(244, 63, 94, 0.04);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span class="badge badge-rose">ACTIVE INCIDENT</span>
+            <strong style="font-size: 0.95rem; color: var(--text-main);">${activeIncident.code}: ${activeIncident.name}</strong>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="badge ${incProgress.percentage === 100 ? 'badge-emerald' : 'badge-rose'}">
+              ${incProgress.percentage === 100 ? '✓ RESOLVED' : `${incProgress.completed} / ${incProgress.total} STEPS COMPLETED (${incProgress.percentage}%)`}
+            </span>
+            <button class="btn btn-sm btn-primary" id="go-to-checklist-btn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer;">
+              Open Incident Checklist →
+            </button>
+          </div>
+        </div>
+        <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+          <strong style="color: var(--amber); font-family: var(--font-mono); font-size: 0.75rem;">AI RECOMMENDED ACTION:</strong> "${incRec.recommendation}"
+        </div>
+      </div>
       
       <!-- Left: Active Engineering Project Tiles -->
       <div class="glass-panel os-workforce-stage no-hover">
@@ -361,14 +387,21 @@ export function renderMissionOverview(containerEl, forceRender = false) {
     if (termBody) termBody.scrollTop = termBody.scrollHeight;
   }, 50);
 
+  // Bind click event for Incident Checklist navigation button
+  const checklistBtn = containerEl.querySelector('#go-to-checklist-btn');
+  if (checklistBtn) {
+    checklistBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      store.setActiveTab('checklist');
+    });
+  }
+
   // Bind click events for full-screen task view
   const tiles = containerEl.querySelectorAll('.task-tile-card');
   tiles.forEach(tile => {
     tile.style.cursor = 'pointer';
     tile.title = 'Click to open full-screen Task Board';
     tile.addEventListener('click', () => {
-      // Assuming store.switchTab or similar navigation exists in app.js
-      // We can dispatch a custom event or update active tab
       const navBtn = document.querySelector('[data-tab="tasks"]');
       if (navBtn) navBtn.click();
     });

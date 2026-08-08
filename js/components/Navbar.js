@@ -2,8 +2,7 @@
    NAVBAR COMPONENT (APPLE macOS STYLE TOP MENU BAR WITH NOTIFICATION BELL)
    ========================================================================== */
 
-import { store } from '../store.js?v=29';
-import { authContext } from '../authContext.js?v=29';
+import { store } from '../store.js';
 
 export function renderNavbar(containerEl) {
   const state = store.getState();
@@ -15,8 +14,6 @@ export function renderNavbar(containerEl) {
   // Preserve popover state before blowing away innerHTML
   const existingPopover = document.getElementById('notif-popover');
   const isPopoverOpen = existingPopover && existingPopover.style.display === 'block';
-
-  const currentUser = typeof authContext.getCurrentUser === 'function' ? authContext.getCurrentUser() : authContext.user;
 
   containerEl.className = 'navbar-container';
   containerEl.innerHTML = `
@@ -81,43 +78,9 @@ export function renderNavbar(containerEl) {
       </div>
 
       <!-- Upgraded Profile Avatar Trigger (Opens Profile, Team Collaboration & Settings) -->
-      <div style="position: relative;" id="profile-wrapper">
-        <button class="user-profile-chip" id="navbar-profile-trigger" title="User Profile, Team & Settings" style="padding: 2px; border-radius: 50%; border: 1.5px solid rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
-          <div class="avatar-img" style="width: 26px; height: 26px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">EV</div>
-        </button>
-
-        <!-- Profile Popover -->
-        <div id="profile-popover" style="display: none; position: absolute; top: 130%; right: 0; width: 220px; background: #09090b; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; overflow: hidden; font-family: var(--font-sans); font-size: 0.85rem;">
-          <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); background: #141419;">
-            <div style="font-weight: 700; color: #fff;">${currentUser?.name || 'Engineer'}</div>
-            <div style="font-size: 0.75rem; color: #a1a1aa; margin-top: 0.2rem;">${currentUser?.role || 'User'}</div>
-          </div>
-          <div style="padding: 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
-            <button class="profile-menu-item" id="menu-my-profile" style="text-align: left; background: transparent; border: none; color: #e4e4e7; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; width: 100%; transition: background 0.2s;">My Profile</button>
-            
-            ${authContext.isDemoModeActive ? `
-            <div style="position: relative;" id="menu-switch-demo-wrapper">
-              <button class="profile-menu-item" id="menu-switch-demo" style="text-align: left; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); color: #818cf8; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; width: 100%; transition: background 0.2s; display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem; margin-bottom: 0.2rem;">
-                Switch Demo Account
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
-              
-              <div id="demo-account-submenu" style="display: none; position: absolute; top: 0; right: 105%; width: 180px; background: #09090b; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 0.5rem; z-index: 10000; flex-direction: column; gap: 0.2rem;">
-                ${['Admin', 'User', 'Hospital', 'Authority', 'Investigator', 'Reviewer'].map(r => `
-                  <button class="demo-role-item" data-role="${r}" style="text-align: left; background: ${authContext.demoRole === r ? 'rgba(255,255,255,0.1)' : 'transparent'}; border: none; color: ${authContext.demoRole === r ? '#fff' : '#a1a1aa'}; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; width: 100%; transition: background 0.2s;">
-                    ${r}
-                  </button>
-                `).join('')}
-              </div>
-            </div>
-            ` : ''}
-            
-            <button class="profile-menu-item" id="menu-settings" style="text-align: left; background: transparent; border: none; color: #e4e4e7; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; width: 100%; transition: background 0.2s;">Settings</button>
-            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 0.25rem 0;"></div>
-            <button class="profile-menu-item" id="menu-logout" style="text-align: left; background: transparent; border: none; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; width: 100%; transition: background 0.2s;">Logout</button>
-          </div>
-        </div>
-      </div>
+      <button class="user-profile-chip" id="navbar-profile-trigger" title="User Profile, Team & Settings" style="padding: 2px; border-radius: 50%; border: 1.5px solid rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
+        <div class="avatar-img" style="width: 26px; height: 26px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">EV</div>
+      </button>
     </div>
   `;
 
@@ -126,12 +89,6 @@ export function renderNavbar(containerEl) {
     const newPopover = document.getElementById('notif-popover');
     if (newPopover) newPopover.style.display = 'block';
     updateNotificationPopover();
-  }
-
-  // Restore profile popover state if it was open
-  const profilePopoverEl = document.getElementById('profile-popover');
-  if (store.state.isProfilePopoverOpen && profilePopoverEl) {
-    profilePopoverEl.style.display = 'block';
   }
 }
 

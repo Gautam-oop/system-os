@@ -72,7 +72,6 @@ class AuthService {
     return json.data;
   }
 
-
   /**
    * Logout session
    */
