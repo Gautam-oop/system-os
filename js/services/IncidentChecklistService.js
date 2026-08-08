@@ -22,8 +22,8 @@ const DEFAULT_ACTIONS = [
  * Active incident register for the operational mission control context.
  */
 const ACTIVE_INCIDENTS = [
-  { id: 'incident_active_001', code: 'INC-9021', name: 'API Gateway Latency Spike & Rate Limit Failures', severity: 'CRITICAL', status: 'ACTIVE' },
-  { id: 'incident_002', code: 'INC-9022', name: 'PostgreSQL Connection Pool Exhaustion (US-East)', severity: 'HIGH', status: 'INVESTIGATING' }
+  { id: 'incident_active_001', code: 'INC-9021', name: 'Critical Database Failure', title: 'Critical Database Failure', severity: 'CRITICAL', status: 'ACTIVE' },
+  { id: 'incident_002', code: 'INC-9022', name: 'PostgreSQL Connection Pool Exhaustion (US-East)', title: 'PostgreSQL Connection Pool Exhaustion', severity: 'HIGH', status: 'INVESTIGATING' }
 ];
 
 /**

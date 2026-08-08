@@ -173,6 +173,8 @@ function initApp() {
   store.subscribe('checklistUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'checklist' && views.checklist) renderIncidentChecklist(views.checklist);
+    if (tab === 'warroom' && views.warroom) renderWarRoom(views.warroom);
+    if (tab === 'overview' && views.overview) renderMissionOverview(views.overview);
   });
 
   store.subscribe('toast', (toastData) => {
