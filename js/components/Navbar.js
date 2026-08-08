@@ -78,9 +78,31 @@ export function renderNavbar(containerEl) {
       </div>
 
       <!-- Upgraded Profile Avatar Trigger (Opens Profile, Team Collaboration & Settings) -->
-      <button class="user-profile-chip" id="navbar-profile-trigger" title="User Profile, Team & Settings" style="padding: 2px; border-radius: 50%; border: 1.5px solid rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
-        <div class="avatar-img" style="width: 26px; height: 26px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">EV</div>
-      </button>
+      <div style="position: relative;">
+        <button class="user-profile-chip" id="navbar-profile-trigger" title="User Profile, Team & Settings" style="padding: 2px; border-radius: 50%; border: 1.5px solid rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 100%); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
+          <div class="avatar-img" style="width: 26px; height: 26px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">EV</div>
+        </button>
+        <!-- Profile Dropdown Popover -->
+        <div id="profile-popover" style="display: none; position: absolute; top: 120%; right: 0; width: 220px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 1000; padding: 0.5rem; flex-direction: column;">
+          <div style="padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 0.5rem;">
+            <div style="font-size: 0.85rem; font-weight: 600; color: #f8fafc;">${(typeof authContext.getCurrentUser === 'function' ? authContext.getCurrentUser() : authContext.user)?.name || 'Lead Engineer'}</div>
+            <div style="font-size: 0.75rem; color: #94a3b8;">${(typeof authContext.getCurrentUser === 'function' ? authContext.getCurrentUser() : authContext.user)?.email || 'lead@missionos.ai'}</div>
+          </div>
+          <button class="profile-menu-item" id="menu-profile" style="background: none; border: none; width: 100%; text-align: left; padding: 0.75rem 1rem; color: #f1f5f9; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            View Profile
+          </button>
+          <button class="profile-menu-item" id="menu-settings" style="background: none; border: none; width: 100%; text-align: left; padding: 0.75rem 1rem; color: #f1f5f9; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Settings
+          </button>
+          <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 0.5rem 0;"></div>
+          <button class="profile-menu-item" id="menu-logout" style="background: none; border: none; width: 100%; text-align: left; padding: 0.75rem 1rem; color: #ef4444; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
   `;
 
@@ -89,6 +111,12 @@ export function renderNavbar(containerEl) {
     const newPopover = document.getElementById('notif-popover');
     if (newPopover) newPopover.style.display = 'block';
     updateNotificationPopover();
+  }
+
+  // Restore profile popover state if it was open
+  const profilePopoverEl = document.getElementById('profile-popover');
+  if (store.state.isProfilePopoverOpen && profilePopoverEl) {
+    profilePopoverEl.style.display = 'flex';
   }
 }
 

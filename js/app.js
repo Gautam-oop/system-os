@@ -226,7 +226,37 @@ function initApp() {
     navbarEl.addEventListener('click', (e) => {
       const profileBtn = e.target.closest('#navbar-profile-trigger');
       if (profileBtn) {
+        const popover = document.getElementById('profile-popover');
+        if (popover) {
+          const isVisible = popover.style.display === 'flex';
+          popover.style.display = isVisible ? 'none' : 'flex';
+          store.state.isProfilePopoverOpen = !isVisible;
+        }
+        e.stopPropagation();
+        return;
+      }
+      
+      const menuProfile = e.target.closest('#menu-profile');
+      if (menuProfile) {
+        document.getElementById('profile-popover').style.display = 'none';
+        store.state.isProfilePopoverOpen = false;
         showUserProfileModal('profile');
+        return;
+      }
+      
+      const menuSettings = e.target.closest('#menu-settings');
+      if (menuSettings) {
+        document.getElementById('profile-popover').style.display = 'none';
+        store.state.isProfilePopoverOpen = false;
+        showUserProfileModal('settings');
+        return;
+      }
+
+      const menuLogout = e.target.closest('#menu-logout');
+      if (menuLogout) {
+        document.getElementById('profile-popover').style.display = 'none';
+        store.state.isProfilePopoverOpen = false;
+        store.notify('logout');
         return;
       }
 
