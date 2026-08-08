@@ -7,7 +7,7 @@ MISSIONOS FASTAPI BACKEND - USER DATABASE
 import os
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import create_engine, Column, String, DateTime
+from sqlalchemy import create_engine, Column, String, DateTime, Boolean, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -42,6 +42,7 @@ class User(Base):
     last_login = Column(DateTime, nullable=True)
     role = Column(String, default="user")
     avatar = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
 
 def init_db():
     """
@@ -49,8 +50,20 @@ def init_db():
     """
     Base.metadata.create_all(bind=engine)
     
-    # Seed default user if not exists
+    # Add auto-migration check to dynamically add is_active column
     db = SessionLocal()
+    try:
+        cursor = db.execute(text("PRAGMA table_info(users)"))
+        columns = [row[1] for row in cursor.fetchall()]
+        if "is_active" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+            db.commit()
+            print("[*] Migrated database: added is_active column to users table")
+    except Exception as e:
+        print(f"[!] Migration failed: {e}")
+        db.rollback()
+    
+    # Seed default user if not exists
     try:
         admin_email = "admin@missionops.dev"
         admin_user = db.query(User).filter(User.email == admin_email).first()
@@ -65,7 +78,8 @@ def init_db():
                 created_at=datetime.utcnow(),
                 last_login=None,
                 role="admin",
-                avatar="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150"
+                avatar="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
+                is_active=True
             )
             db.add(new_admin)
             db.commit()

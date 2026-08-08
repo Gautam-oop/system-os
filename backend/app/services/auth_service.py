@@ -17,11 +17,67 @@ from backend.app.utils.jwt import create_access_token, create_refresh_token, dec
 class AuthService:
     
     @staticmethod
+    def signup(payload: UserRegisterRequest, db: Session) -> TokenResponse:
+        """
+        Register a new user account.
+        """
+        existing_user = db.query(User).filter(User.email == payload.email).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An account with this email address already exists."
+            )
+
+        new_user = User(
+            id=f"usr_{uuid.uuid4().hex[:12]}",
+            name=payload.name,
+            email=payload.email,
+            hashed_password=hash_password(payload.password),
+            created_at=datetime.utcnow(),
+            last_login=None,
+            role=payload.role or "user",
+            avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+            is_active=True
+        )
+
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        user_data = {"sub": new_user.email, "role": new_user.role, "name": new_user.name}
+        access_token = create_access_token(user_data)
+        refresh_token = create_refresh_token(user_data)
+
+        user_response = UserResponse(
+            id=new_user.id,
+            name=new_user.name,
+            email=new_user.email,
+            created_at=new_user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            last_login=None,
+            role=new_user.role,
+            avatar=new_user.avatar,
+            is_active=new_user.is_active
+        )
+
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            user=user_response
+        )
+
+    @staticmethod
     def login(payload: UserLoginRequest, db: Session) -> TokenResponse:
         """
         Authenticate a user and return access/refresh tokens.
         """
         user = db.query(User).filter(User.email == payload.email).first()
+        if user and not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account has been disabled. Please contact the administrator."
+            )
+
         if not user:
             # Prototype convenience: dynamically register any email typed
             name_prefix = payload.email.split('@')[0].capitalize()
@@ -33,7 +89,8 @@ class AuthService:
                 created_at=datetime.utcnow(),
                 last_login=None,
                 role="user",
-                avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+                avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+                is_active=True
             )
             db.add(user)
             db.commit()
@@ -59,7 +116,8 @@ class AuthService:
             created_at=user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             last_login=user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if user.last_login else None,
             role=user.role,
-            avatar=user.avatar
+            avatar=user.avatar,
+            is_active=user.is_active
         )
 
         return TokenResponse(
@@ -95,6 +153,12 @@ class AuthService:
                 detail="User account no longer exists."
             )
 
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account has been disabled."
+            )
+
         # Generate fresh tokens
         user_data = {"sub": user.email, "role": user.role, "name": user.name}
         new_access_token = create_access_token(user_data)
@@ -107,7 +171,8 @@ class AuthService:
             created_at=user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             last_login=user.last_login.strftime("%Y-%m-%dT%H:%M:%SZ") if user.last_login else None,
             role=user.role,
-            avatar=user.avatar
+            avatar=user.avatar,
+            is_active=user.is_active
         )
 
         return TokenResponse(

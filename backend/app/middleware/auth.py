@@ -47,6 +47,24 @@ def get_current_user(
     if not user:
         # Vercel ephemeral SQLite DB wipes between lambdas.
         # If JWT is valid but user is missing, mock the user object to prevent 401s.
-        user = User(id="temp_usr", email=email, name="MissionOps User", role="admin")
+        user = User(id="temp_usr", email=email, name="MissionOps User", role="admin", is_active=True)
+        
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been disabled."
+        )
         
     return user
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """
+    Dependency to validate that the current user is an administrator.
+    Raises 403 Forbidden if not.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Admin access required."
+        )
+    return current_user
