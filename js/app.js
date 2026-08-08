@@ -232,6 +232,24 @@ function initApp() {
   // ─── Event Delegation for Navbar Clicks ──────────────────────────────
   if (navbarEl) {
     navbarEl.addEventListener('click', (e) => {
+      const newTaskBtn = e.target.closest('#navbar-new-issue-btn');
+      if (newTaskBtn) {
+        store.notify('openModal', { type: 'new-task' });
+        return;
+      }
+
+      const searchBtn = e.target.closest('#navbar-search-trigger');
+      if (searchBtn) {
+        store.notify('openModal', { type: 'command-palette' });
+        return;
+      }
+
+      const tutorialBtn = e.target.closest('#tutorial-trigger');
+      if (tutorialBtn) {
+        showOnboardingTutorial();
+        return;
+      }
+
       const profileBtn = e.target.closest('#navbar-profile-trigger');
       if (profileBtn) {
         const popover = document.getElementById('profile-popover');
