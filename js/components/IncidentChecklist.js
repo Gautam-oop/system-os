@@ -6,6 +6,7 @@
 import { store } from '../store.js';
 import { incidentChecklistService } from '../services/IncidentChecklistService.js';
 import { animateProgressBar, animateStaggeredEntrance } from '../animations.js';
+import { reportExportService } from '../services/ReportExportService.js';
 
 // Default incident ID for the current mission context
 const ACTIVE_INCIDENT_ID = 'incident_active_001';
@@ -42,9 +43,9 @@ export function renderIncidentChecklist(containerEl, activeIncidentId = 'inciden
             </option>
           `).join('')}
         </select>
-        <span class="badge ${progress.percentage === 100 ? 'badge-emerald' : 'badge-rose'}">
-          ${progress.percentage === 100 ? '✓ ALL COMPLETE' : `${progress.completed} / ${progress.total} STEPS (${progress.percentage}%)`}
-        </span>
+        <span class="badge ${progress.percentage === 100 ? 'badge-emerald' : 'badge-rose'}">${progress.percentage === 100 ? '✓ ALL COMPLETE' : `${progress.completed} / ${progress.total} STEPS (${progress.percentage}%)`}</span>
+<select id="export-format-selector" class="btn" style="margin-left:0.5rem;"><option value="pdf">PDF</option><option value="html">HTML</option><option value="csv">CSV</option></select>
+<button id="export-report-button" class="btn" style="margin-left:0.5rem;background:var(--emerald-bg);color:var(--emerald);border:none;border-radius:4px;padding:0.35rem 0.75rem;cursor:pointer;">Export Report</button>
       </div>
     </div>
 
@@ -242,6 +243,15 @@ export function renderIncidentChecklist(containerEl, activeIncidentId = 'inciden
 
   // Bind click events to checklist items
   bindChecklistEvents(containerEl, activeIncidentId);
+  // Export report button handler
+  const exportBtn = containerEl.querySelector('#export-report-button');
+  const formatSelect = containerEl.querySelector('#export-format-selector');
+  if (exportBtn && formatSelect) {
+    exportBtn.addEventListener('click', () => {
+      const format = formatSelect.value;
+      reportExportService.exportIncidentReport(format);
+    });
+  }
 }
 
 /**
