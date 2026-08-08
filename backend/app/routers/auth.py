@@ -37,7 +37,7 @@ def signup(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         raise HTTPException(
-            status_code=500,
+            status_code=400,
             detail=f"Signup failed: {str(e)} | Traceback: {traceback.format_exc()}"
         )
 
@@ -57,7 +57,7 @@ def login(payload: UserLoginRequest, db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         raise HTTPException(
-            status_code=500,
+            status_code=400,
             detail=f"Login failed: {str(e)} | Traceback: {traceback.format_exc()}"
         )
 
