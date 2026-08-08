@@ -10,6 +10,10 @@ class AuthContext {
     this.accessToken = localStorage.getItem('mo_access_token') || sessionStorage.getItem('mo_access_token') || null;
     this.refreshToken = localStorage.getItem('mo_refresh_token') || sessionStorage.getItem('mo_refresh_token') || null;
     
+    this.isDemoModeActive = false;
+    this.demoRole = null;
+    this.demoUser = null;
+
     this.subscribers = [];
   }
 
@@ -199,8 +203,36 @@ class AuthContext {
     return this.accessToken;
   }
 
-  getCurrentUser() {
+  getTrueUser() {
     return this.user;
+  }
+
+  getCurrentUser() {
+    if (this.isDemoModeActive && this.demoUser) {
+      return this.demoUser;
+    }
+    return this.user;
+  }
+
+  setDemoMode(isActive, role) {
+    this.isDemoModeActive = isActive;
+    this.demoRole = isActive ? role : null;
+    
+    if (isActive) {
+      this.demoUser = {
+        name: `Demo ${role}`,
+        username: `demo_${role.toLowerCase()}`,
+        email: `demo.${role.toLowerCase()}@missionos.ai`,
+        role: role.toLowerCase()
+      };
+    } else {
+      this.demoUser = null;
+    }
+    
+    this.notify('auth_state_changed', { 
+      user: this.getCurrentUser(), 
+      authenticated: this.isLoggedIn() 
+    });
   }
 }
 

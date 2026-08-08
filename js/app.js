@@ -18,6 +18,7 @@ import { renderMissionReport } from './components/MissionReport.js';
 import { renderModalHost } from './components/CommandPaletteModal.js';
 import { renderWarRoom } from './components/WarRoom.js';
 import { renderDecisionLog } from './components/DecisionLog.js';
+import { renderIncidentsView } from './components/IncidentsView.js';
 import { renderIncidentChecklist } from './components/IncidentChecklist.js';
 import { renderApprovalModal } from './components/ApprovalModal.js';
 import { showOnboardingTutorial } from './components/OnboardingModal.js';
@@ -42,6 +43,7 @@ function initApp() {
 
   const views = {
     overview: document.getElementById('view-overview'),
+    incidents: document.getElementById('view-incidents'),
     agents: document.getElementById('view-agents'),
     tasks: document.getElementById('view-tasks'),
     timeline: document.getElementById('view-timeline'),
@@ -71,6 +73,7 @@ function initApp() {
   function renderView(tabId, sectionEl) {
     switch (tabId) {
       case 'overview':  renderMissionOverview(sectionEl); break;
+      case 'incidents': renderIncidentsView(sectionEl); break;
       case 'agents':    renderAIWorkforce(sectionEl); break;
       case 'tasks':     renderTaskBoard(sectionEl); break;
       case 'timeline':  renderTimelineView(sectionEl); break;
@@ -130,6 +133,11 @@ function initApp() {
   store.subscribe('tasksUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'tasks' && views.tasks) renderTaskBoard(views.tasks);
+  });
+
+  store.subscribe('incidentsUpdated', () => {
+    const tab = store.getActiveTab();
+    if (tab === 'incidents' && views.incidents) renderIncidentsView(views.incidents);
   });
 
   store.subscribe('timelineUpdated', () => {
@@ -241,6 +249,14 @@ function initApp() {
         document.getElementById('profile-popover').style.display = 'none';
         store.state.isProfilePopoverOpen = false;
         showUserProfileModal('profile');
+        return;
+      }
+      
+      const menuSwitchDemo = e.target.closest('#menu-switch-demo');
+      if (menuSwitchDemo) {
+        document.getElementById('profile-popover').style.display = 'none';
+        store.state.isProfilePopoverOpen = false;
+        store.setActiveTab('incidents');
         return;
       }
       
