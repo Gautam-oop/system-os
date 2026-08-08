@@ -18,6 +18,7 @@ import { renderMissionReport } from './components/MissionReport.js';
 import { renderModalHost } from './components/CommandPaletteModal.js';
 import { renderWarRoom } from './components/WarRoom.js';
 import { renderDecisionLog } from './components/DecisionLog.js';
+import { renderIncidentChecklist } from './components/IncidentChecklist.js';
 import { renderApprovalModal } from './components/ApprovalModal.js';
 import { showOnboardingTutorial } from './components/OnboardingModal.js';
 import { showUserProfileModal } from './components/UserProfileModal.js';
@@ -49,7 +50,8 @@ function initApp() {
     decisionlog: document.getElementById('view-decisionlog'),
     analytics: document.getElementById('view-analytics'),
     report: document.getElementById('view-report'),
-    'admin-users': document.getElementById('view-admin-users')
+    'admin-users': document.getElementById('view-admin-users'),
+    checklist: document.getElementById('view-checklist')
   };
 
   function switchView(activeTabId) {
@@ -78,6 +80,7 @@ function initApp() {
       case 'analytics': renderAnalyticsCards(sectionEl); break;
       case 'report':    renderMissionReport(sectionEl); break;
       case 'admin-users': renderAdminUsers(sectionEl); break;
+      case 'checklist': renderIncidentChecklist(sectionEl); break;
     }
     setTimeout(() => {
       const cards = sectionEl.querySelectorAll('.glass-panel, .kanban-task-card, .feed-item, .objective-item');
@@ -165,6 +168,11 @@ function initApp() {
   store.subscribe('analyticsUpdated', () => {
     const tab = store.getActiveTab();
     if (tab === 'analytics' && views.analytics) renderAnalyticsCards(views.analytics);
+  });
+
+  store.subscribe('checklistUpdated', () => {
+    const tab = store.getActiveTab();
+    if (tab === 'checklist' && views.checklist) renderIncidentChecklist(views.checklist);
   });
 
   store.subscribe('toast', (toastData) => {
