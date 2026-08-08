@@ -20,9 +20,11 @@ if os.environ.get("VERCEL"):
     DATABASE_URL = "sqlite:////tmp/mission_ops_users.db"
 else:
     DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'mission_ops_users.db')}"
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Allow DATABASE_URL env var override (e.g. PostgreSQL on production), but only if set
+DATABASE_URL = os.getenv("DATABASE_URL") or DATABASE_URL
 
 engine = create_engine(DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

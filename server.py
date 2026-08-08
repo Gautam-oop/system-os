@@ -11,9 +11,29 @@ import json
 import re
 import os
 import time
+import uuid
 
 PORT = 8080
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+
+# --------------------------------------------------------------------------
+# MOCK AUTH STORE (in-memory users + sessions)
+# --------------------------------------------------------------------------
+
+AUTH_USERS = {
+    "admin@missionops.dev": {
+        "id": "usr_admin_001",
+        "name": "Eleanor Vance",
+        "email": "admin@missionops.dev",
+        "password": "password123",
+        "role": "admin",
+        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
+        "created_at": "2026-08-01T06:00:00Z",
+        "last_login": None
+    }
+}
+AUTH_TOKENS = {}  # token -> email mapping
+
 
 # --------------------------------------------------------------------------
 # IN-MEMORY BACKEND DATABASE (SOFTWARE TEAM WORKFORCE SCHEMAS)
@@ -426,7 +446,21 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = self.path.split('?')[0]
         norm = path.replace('/api/v1', '/api')
 
-        if norm == '/api/mission' or norm.startswith('/api/mission/'):
+        if norm == '/api/auth/me':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            if not email or email not in AUTH_USERS:
+                body = json.dumps({"detail": "Unauthorized"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            user = dict(AUTH_USERS[email])
+            user.pop('password', None)
+            self.send_json(user)
+        elif norm == '/api/mission' or norm.startswith('/api/mission/'):
             self.send_json(DB["mission"])
         elif norm == '/api/employees':
             self.send_json(DB["employees"])
@@ -451,7 +485,96 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = self.path.split('?')[0]
         norm = path.replace('/api/v1', '/api')
 
-        if norm == '/api/tasks':
+        if norm == '/api/auth/login':
+            email = body.get('email', '').strip().lower()
+            password = body.get('password', '')
+            user = AUTH_USERS.get(email)
+            if not user or user['password'] != password:
+                err = json.dumps({"detail": "Invalid email or password"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+            token = 'mock_' + str(uuid.uuid4()).replace('-', '')
+            refresh = 'refresh_' + str(uuid.uuid4()).replace('-', '')
+            AUTH_TOKENS[token] = email
+            AUTH_TOKENS[refresh] = email
+            AUTH_USERS[email]['last_login'] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            safe_user = {k: v for k, v in user.items() if k != 'password'}
+            self.send_json({
+                "access_token": token,
+                "refresh_token": refresh,
+                "token_type": "bearer",
+                "user": safe_user
+            })
+
+        elif norm == '/api/auth/signup':
+            email = body.get('email', '').strip().lower()
+            password = body.get('password', '')
+            name = body.get('name', 'New User')
+            if email in AUTH_USERS:
+                err = json.dumps({"detail": "An account with this email already exists"}).encode('utf-8')
+                self.send_response(409)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+            new_user = {
+                "id": 'usr_' + str(uuid.uuid4()).replace('-', '')[:12],
+                "name": name,
+                "email": email,
+                "password": password,
+                "role": "user",
+                "avatar": None,
+                "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "last_login": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            }
+            AUTH_USERS[email] = new_user
+            token = 'mock_' + str(uuid.uuid4()).replace('-', '')
+            refresh = 'refresh_' + str(uuid.uuid4()).replace('-', '')
+            AUTH_TOKENS[token] = email
+            AUTH_TOKENS[refresh] = email
+            safe_user = {k: v for k, v in new_user.items() if k != 'password'}
+            self.send_json({
+                "access_token": token,
+                "refresh_token": refresh,
+                "token_type": "bearer",
+                "user": safe_user
+            }, code=201)
+
+        elif norm == '/api/auth/logout':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            AUTH_TOKENS.pop(token, None)
+            self.send_json({"message": "Logged out successfully"})
+
+        elif norm == '/api/auth/refresh':
+            refresh = body.get('refresh_token', '')
+            email = AUTH_TOKENS.get(refresh)
+            if not email or email not in AUTH_USERS:
+                err = json.dumps({"detail": "Invalid refresh token"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+            new_token = 'mock_' + str(uuid.uuid4()).replace('-', '')
+            new_refresh = 'refresh_' + str(uuid.uuid4()).replace('-', '')
+            AUTH_TOKENS.pop(refresh, None)
+            AUTH_TOKENS[new_token] = email
+            AUTH_TOKENS[new_refresh] = email
+            safe_user = {k: v for k, v in AUTH_USERS[email].items() if k != 'password'}
+            self.send_json({
+                "access_token": new_token,
+                "refresh_token": new_refresh,
+                "token_type": "bearer",
+                "user": safe_user
+            })
+
+        elif norm == '/api/tasks':
             new_id = f"TSK-{len(DB['tasks']) + 101}"
             new_task = {
                 "id": new_id,
@@ -469,6 +592,103 @@ class MissionOpsRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif norm == '/api/mission/defcon':
             DB["mission"]["status"] = "Sprint 14 Active"
             self.send_json(DB["mission"])
+        elif norm == '/api/ai/test':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            if not email or email not in AUTH_USERS:
+                err = json.dumps({"detail": "Unauthorized"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            prompt = body.get('prompt', '').strip()
+            if not prompt:
+                err = json.dumps({"detail": "Prompt must not be empty"}).encode('utf-8')
+                self.send_response(422)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            try:
+                from backend.app.services.groq_service import GroqService
+                result = GroqService.chat(
+                    system_prompt="You are MissionOps AI, an expert AI assistant integrated into the MissionOps workforce operating system. Provide clear, professional, and concise responses. Do not expose internal implementation details.",
+                    user_prompt=prompt,
+                )
+                response_bytes = json.dumps({
+                    "success": True,
+                    "response": result,
+                    "model": GroqService._get_model()
+                }).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(response_bytes)))
+                self.end_headers()
+                self.wfile.write(response_bytes)
+            except Exception as exc:
+                err = json.dumps({"detail": str(exc)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+
+        elif norm == '/api/ai/task':
+            token = self.headers.get('Authorization', '').replace('Bearer ', '').strip()
+            email = AUTH_TOKENS.get(token)
+            if not email or email not in AUTH_USERS:
+                err = json.dumps({"detail": "Unauthorized"}).encode('utf-8')
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            task = body.get('task', '').strip()
+            role = body.get('role', '').strip()
+            if not task or not role:
+                err = json.dumps({"detail": "Task and role must not be empty"}).encode('utf-8')
+                self.send_response(422)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
+
+            try:
+                from backend.app.services.groq_service import GroqService
+                from backend.app.routers.ai import _build_role_system_prompt
+                system_prompt = _build_role_system_prompt(role)
+                result = GroqService.chat(
+                    system_prompt=system_prompt,
+                    user_prompt=task,
+                )
+                response_bytes = json.dumps({
+                    "success": True,
+                    "role": role,
+                    "task": task,
+                    "result": result,
+                    "model": GroqService._get_model()
+                }).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(response_bytes)))
+                self.end_headers()
+                self.wfile.write(response_bytes)
+            except Exception as exc:
+                err = json.dumps({"detail": str(exc)}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+
         else:
             self.send_error(404, "Endpoint not found")
 

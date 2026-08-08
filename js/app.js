@@ -29,6 +29,7 @@ import {
   animateModalClose,
   animateToast
 } from './animations.js';
+import { mountAIDevPanel } from './components/AIDevPanel.js';
 
 function initApp() {
   console.log('[missionOS] initApp() starting...');
@@ -260,6 +261,9 @@ function initApp() {
     // Boot store
     console.log('[missionOS] Subscriptions wired. Calling store.boot()...');
     store.boot();
+
+    // Mount Level 1 AI dev panel (developer testing tool)
+    mountAIDevPanel();
 
     // Trigger onboarding tutorial for new users or when requested
     setTimeout(() => {
