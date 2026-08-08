@@ -21,7 +21,7 @@ from backend.app.middleware.auth import get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
-@router.post("/signup", response_model=ApiResponse[TokenResponse], status_code=status.HTTP_201_CREATED)
+@router.post("/signup")
 def signup(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     """
     Register a new user account.
