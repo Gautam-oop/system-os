@@ -4,9 +4,9 @@
    timeline visualization, performance table, and downloadable export.
    ========================================================================== */
 
-import { store } from '../store.js';
-import { reportService } from '../services/ReportService.js';
-import { animateStaggeredEntrance, animateCounter, animateProgressBar } from '../animations.js';
+import { store } from '../store.js?v=29';
+import { reportService } from '../services/ReportService.js?v=29';
+import { animateStaggeredEntrance, animateCounter, animateProgressBar } from '../animations.js?v=29';
 
 export function renderMissionReport(containerEl) {
   const state = store.getState();

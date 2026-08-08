@@ -2,8 +2,8 @@
    MISSIONOS - USER PROFILE, TEAM COLLABORATION & SETTINGS MODAL
    ========================================================================== */
 
-import { authContext } from '../authContext.js';
-import { store } from '../store.js';
+import { authContext } from '../authContext.js?v=29';
+import { store } from '../store.js?v=29';
 
 export function showUserProfileModal(initialTab = 'profile') {
   let modalHost = document.getElementById('user-profile-modal-host');
@@ -13,7 +13,7 @@ export function showUserProfileModal(initialTab = 'profile') {
   modalHost.id = 'user-profile-modal-host';
   document.body.appendChild(modalHost);
 
-  const currentUser = authContext.getCurrentUser() || {
+  const currentUser = (typeof authContext.getCurrentUser === 'function' ? authContext.getCurrentUser() : authContext.user) || {
     name: 'Lead Engineer',
     username: 'lead_dev',
     email: 'lead@missionos.ai',

@@ -3,8 +3,8 @@
    Connects to the FastAPI backend EventSource to reflect real-time execution.
    ========================================================================== */
 
-import { agentService } from './AgentService.js';
-import { apiService } from '../apiService.js';
+import { agentService } from './AgentService.js?v=29';
+import { apiService } from '../apiService.js?v=29';
 
 // Map backend agent roles to UI agent IDs
 const ROLE_TO_AGENT = {

@@ -2,7 +2,7 @@
    MISSIONOS - CLIENT AUTHENTICATION STATE CONTEXT
    ========================================================================== */
 
-import { authService } from './services/AuthService.js';
+import { authService } from './services/AuthService.js?v=29';
 
 class AuthContext {
   constructor() {
@@ -10,6 +10,9 @@ class AuthContext {
     this.accessToken = localStorage.getItem('mo_access_token') || sessionStorage.getItem('mo_access_token') || null;
     this.refreshToken = localStorage.getItem('mo_refresh_token') || sessionStorage.getItem('mo_refresh_token') || null;
     
+    this.isDemoModeActive = false;
+    this.demoRole = null;
+
     this.subscribers = [];
   }
 
@@ -199,8 +202,21 @@ class AuthContext {
     return this.accessToken;
   }
 
-  getCurrentUser() {
+  getTrueUser() {
     return this.user;
+  }
+
+  getCurrentUser() {
+    if (this.user && this.isDemoModeActive && this.demoRole) {
+      return { ...this.user, role: this.demoRole };
+    }
+    return this.user;
+  }
+
+  setDemoMode(isActive, role = null) {
+    this.isDemoModeActive = isActive;
+    this.demoRole = role;
+    this.notify('demo_mode_changed', { isActive, role });
   }
 }
 

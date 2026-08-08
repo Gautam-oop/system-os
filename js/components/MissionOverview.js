@@ -2,8 +2,8 @@
    MISSION OVERVIEW COMPONENT (GRAND CENTERPIECE VIEW)
    ========================================================================== */
 
-import { store } from '../store.js';
-import { animateCounter, animateProgressBar } from '../animations.js';
+import { store } from '../store.js?v=29';
+import { animateCounter, animateProgressBar } from '../animations.js?v=29';
 
 export function renderMissionOverview(containerEl, forceRender = false) {
   const state = store.getState();

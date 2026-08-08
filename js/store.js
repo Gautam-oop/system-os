@@ -2,9 +2,9 @@
    MISSIONOS DASHBOARD - UNIFIED REACTIVE STORE WITH SIMULATION ENGINE
    ========================================================================== */
 
-import { apiService } from './apiService.js';
-import { agentService } from './services/AgentService.js';
-import { SimulationService } from './services/SimulationService.js';
+import { apiService } from './apiService.js?v=29';
+import { agentService } from './services/AgentService.js?v=29';
+import { SimulationService } from './services/SimulationService.js?v=29';
 
 class MissionStore {
   constructor() {
@@ -52,6 +52,17 @@ class MissionStore {
       },
       projectExplorer: {
         files: []
+      },
+      incidents: {
+        data: [],
+        counts: { total: 0, open: 0, escalated: 0, critical: 0 },
+        insight: "",
+        totalSystemIncidents: 0
+      },
+      incidentFilters: {
+        role: 'Admin',
+        status: 'All',
+        searchQuery: ''
       }
     };
 
@@ -332,6 +343,22 @@ class MissionStore {
       console.error('[missionOS] Error processing task:', err);
       this.notify('toast', { type: 'error', text: `Failed to process task: ${err.message}` });
     }
+  }
+
+  // --- INCIDENTS ---
+  updateIncidentFilters(filters) {
+    this.state.incidentFilters = { ...this.state.incidentFilters, ...filters };
+    
+    // Dynamically load IncidentService to avoid circular dependency or import order issues
+    import('./services/IncidentService.js').then(({ incidentService }) => {
+      const result = incidentService.fetchFilteredIncidents(this.state.incidentFilters.role, this.state.incidentFilters.status);
+      this.state.incidents.data = result.incidents;
+      this.state.incidents.counts = result.counts;
+      this.state.incidents.insight = result.insight;
+      this.state.incidents.totalSystemIncidents = result.totalSystemIncidents;
+      
+      this.notify('incidentsUpdated', this.state.incidents);
+    });
   }
 }
 

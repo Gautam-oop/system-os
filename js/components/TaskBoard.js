@@ -2,8 +2,8 @@
    TASK BOARD (DYNAMIC KANBAN WITH FRAMER MOTION MOVEMENTS)
    ========================================================================== */
 
-import { store } from '../store.js';
-import { animateStaggeredEntrance } from '../animations.js';
+import { store } from '../store.js?v=29';
+import { animateStaggeredEntrance } from '../animations.js?v=29';
 
 export function renderTaskBoard(containerEl) {
   const state = store.getState();

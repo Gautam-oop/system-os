@@ -1,4 +1,4 @@
-import { store } from '../store.js';
+import { store } from '../store.js?v=29';
 
 let isScrolledToBottom = true;
 

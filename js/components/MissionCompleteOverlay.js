@@ -2,7 +2,7 @@
    MISSIONOS - MISSION COMPLETE OVERLAY (Fullscreen Celebration)
    ========================================================================== */
 
-import { store } from '../store.js';
+import { store } from '../store.js?v=29';
 
 export function showMissionCompleteOverlay() {
   // Don't show twice

@@ -4,8 +4,8 @@
    showing exactly what the agent is doing, like watching a real engineer.
    ========================================================================== */
 
-import { store } from '../store.js';
-import { animateProgressBar } from '../animations.js';
+import { store } from '../store.js?v=29';
+import { animateProgressBar } from '../animations.js?v=29';
 
 export function renderAIWorkforce(containerEl) {
   const state = store.getState();
